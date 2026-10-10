@@ -43,17 +43,19 @@ class FocusView {
     return MARGIN + STAGE_BAR_H + (this.timeline ? GAP + TIMELINE_H : 0);
   }
 
-  // The chrome keeps the scale one bass line would get, so it doesn't jump in
-  // size when SHOW changes; only the devices below it grow or shrink.
+  // Two scales. The chrome takes the scale PATTERNS with one bass line would
+  // get, whatever the stage or SHOW, so the bar never changes size; the
+  // devices take whatever scale fits the room left under this stage's chrome.
+  // Either way the devices then stretch to fill the window, any proportion.
   static size(state) {
+    const bass = devicesSize(['bass1']);
     return {
       min: devicesSize(shownDevices(state)),
       chrome: this.chromeH(),
       chromeW: STAGE_BAR_MIN_W + MARGIN * 2,
-      reference: devicesSize(['bass1']),
-      // Any width: wide windows spread the step grid instead of leaving margins.
-      stretch: { w: Infinity, h: 1.6 },
-      // A short window can need a bit under 1:1 under the AUTOMATE timeline;
+      reference: { w: bass.w, h: bass.h + MARGIN + STAGE_BAR_H },
+      stretch: { w: Infinity, h: Infinity },
+      // Under the AUTOMATE timeline a short window can need a bit under 1:1;
       // still bigger than in the rack.
       minScale: 0.5,
     };
@@ -103,12 +105,13 @@ class FocusView {
     });
   }
 
-  draw(ctx) {
+  // chromeScale: device pixels per chrome unit (see main.js render).
+  draw(ctx, { chromeScale }) {
     const { state } = this;
     ctx.fillStyle = C.rackBg;
     ctx.fillRect(0, 0, this.width, this.height);
     ctx.save();
-    ctx.scale(this.k, this.k);
+    ctx.setTransform(chromeScale, 0, 0, chromeScale, 0, 0);
     for (const d of this.chrome) drawAt(ctx, d);
     ctx.restore();
     for (const d of this.devices) drawAt(ctx, d);

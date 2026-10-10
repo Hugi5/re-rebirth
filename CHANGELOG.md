@@ -4,9 +4,9 @@
 
 ### New
 - **PATTERNS stage** for writing parts in big, readable type. FOCUS on the transport opens it; RACK on its bar goes back.
-  - SHOW picks the one instrument that fills the window: Bass Line 1 or 2, Drum 08 or Drum 09. Drum machines show every lane at once across the whole panel, with the selected instrument's knobs below. The stage and SHOW are remembered.
+  - SHOW picks the one instrument that fills the window: Bass Line 1 or 2, Drum 08 or Drum 09. It fits any window shape, wide or tall: the step grid takes the extra room, and its cells, lights and type grow with it. Drum machines show every lane at once across the whole panel, with the selected instrument's knobs below. The stage and SHOW are remembered.
   - Type bass lines on the computer keyboard: A W S E D F T G Y H U J K play C to C and write the selected step, then the cursor moves on. Shift adds accent, Z / X set the octave, Tab slides the note you just typed into the next one, Backspace writes a rest, the arrow keys move the cursor. The bass line's header spells this out.
-  - A slim bar on top has the stages, play, stop, record, tempo, position, SHOW and full screen (F types a note here). It keeps its size whatever you show.
+  - A slim bar on top has the stages, play, stop, record, tempo, position, SHOW and full screen (F types a note here). It keeps its size whatever the stage or SHOW.
 - **AUTOMATE stage** for recording knob moves over a loop, pass after pass:
   - A timeline under the bar shows the whole song: drag A and B on it to set the loop (they snap to bars, to beats with Shift), drag anywhere else to draw a new loop, click to jump there. LOOP A–B switches it on and off.
   - Arm REC and play: the loop keeps going round, and every knob you touch is recorded. No arming per knob.

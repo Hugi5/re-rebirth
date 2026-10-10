@@ -238,7 +238,8 @@ export class DrumMachine {
     ctx.lineWidth = 0.8;
     ctx.stroke();
 
-    const x0 = GRID_X + GRID_LABEL_W + 6;
+    const labelW = this.stacked ? 28 : GRID_LABEL_W; // room for the bigger names
+    const x0 = GRID_X + labelW + 6;
     const y0 = sy + 3;
     const stepW = (GRID_X + sw - 4 - x0) / 16;
     const laneH = (sh - 6) / this.lanes.length;
@@ -260,12 +261,12 @@ export class DrumMachine {
         ctx.fillStyle = 'rgba(255,255,255,0.07)';
         ctx.fillRect(GRID_X + 2, y, sw - 4, laneH);
       }
-      text(ctx, track.toUpperCase(), GRID_X + 6, y + laneH / 2 + 0.5, { size: Math.min(6.5, laneH * 0.55), weight: 800, align: 'left', color: selected ? t.led : C.inkMuted, spacing: 0.4 });
+      text(ctx, track.toUpperCase(), GRID_X + 6, y + laneH / 2 + 0.5, { size: this.stacked ? Math.min(9, laneH * 0.5) : Math.min(6.5, laneH * 0.55), weight: 800, align: 'left', color: selected ? t.led : C.inkMuted, spacing: 0.4 });
       const listen = () => {
         dev.selected = track;
         this.app.engine.auditionDrum(cfg.id, track);
       };
-      hits.rect(ctx, GRID_X, y, GRID_LABEL_W + 4, laneH, click(listen));
+      hits.rect(ctx, GRID_X, y, labelW + 4, laneH, click(listen));
       for (let i = 0; i < 16; i++) {
         const hit = steps?.[i] ?? HIT.off;
         const cx = x0 + i * stepW + 1;

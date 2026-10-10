@@ -45,6 +45,7 @@ const app = { clock, engine, files, library, notify, toggleFullscreen };
 // before loading, whatever stage is shown.
 let view = new Rack(state, app);
 let viewScale = 1;
+let chromeScale = 1;
 
 if (!files.restore()) loadDemo(state);
 loadPrefs(state.ui);
@@ -77,10 +78,13 @@ function render() {
   // Draw in design units; the transform handles window scale + HiDPI. One exact
   // scale for both axes (not canvas size / view size, which carries rounding),
   // so the stage bar lands on the same pixels whichever devices are below it.
-  const s = viewScale * (window.devicePixelRatio || 1);
+  const dpr = window.devicePixelRatio || 1;
+  const s = viewScale * dpr;
   ctx.setTransform(s, 0, 0, s, 0, 0);
   hits.clear();
-  view.draw(ctx);
+  // Chrome gets its own exact scale too (view scale x k would differ in the
+  // last bits per stage, and with it the anti-aliasing).
+  view.draw(ctx, { chromeScale: (view.k === view.chromeScale ? chromeScale : viewScale * view.k) * dpr });
   const lib = state.ui.library;
   search.place(lib?.search ?? null, view.width, lib?.query ?? '');
 }
@@ -99,17 +103,18 @@ function animate() {
 // taller to use the rest, up to its stretch limit. Smaller windows scroll,
 // like the original rack did.
 // A view's chrome (the stage bar, `chrome` units tall above the devices) is
-// scaled as if the view were its `reference` layout, so it keeps one size on
-// screen while the devices under it change.
+// scaled to fit the view's `reference` layout (chrome included), so it keeps
+// one size on screen while the devices under it change; the devices fit the
+// room left under it.
 function resize() {
   const W = window.innerWidth;
   const H = window.innerHeight;
   const View = viewClass(state);
-  const { min, stretch, chrome = 0, chromeW = 0, reference = min, minScale = 1 } = View.size(state);
-  const chromeScale = Math.max(minScale, Math.min(W / reference.w, H / (reference.h + chrome)));
-  const free = H - chrome * chromeScale;
+  const { min, stretch, chrome = 0, chromeW = 0, minScale = 1, reference = { w: min.w, h: min.h + chrome } } = View.size(state);
+  const chromeFit = Math.max(minScale, Math.min(W / reference.w, H / reference.h));
+  const free = H - chrome * chromeFit;
   const scale = Math.max(minScale, Math.min(W / min.w, free / min.h));
-  const k = chromeScale / scale;
+  const k = chromeFit / scale;
   // Never narrower than the chrome needs at its scale, even past the stretch limit.
   const floorW = Math.max(min.w, chromeW * k);
   // Fractional on purpose: a view that fills the window then measures exactly
@@ -119,6 +124,7 @@ function resize() {
   const stale = width !== view.width || height !== view.height || viewKey(state) !== view.key || (chrome && k !== view.chromeScale);
   if (stale) view = new View(state, app, width, height, k);
   viewScale = scale;
+  chromeScale = chromeFit;
   // The epsilon keeps float error (1439.9999) from losing a pixel.
   const cssW = Math.floor(view.width * scale + 1e-6);
   const cssH = Math.floor(view.height * scale + 1e-6);
