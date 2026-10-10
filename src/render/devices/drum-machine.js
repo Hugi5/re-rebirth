@@ -2,7 +2,7 @@ import { HIT } from '../../state.js';
 import { hits } from '../../ui/hits.js';
 import { click, paintSteps, toggle } from '../../ui/handlers.js';
 import { drawPatternTools, Knob, PatternSelector } from '../controls.js';
-import { brushed, button, led, line, panel, rrect, screws, shade, text, textWidth, vgrad } from '../primitives.js';
+import { brushed, button, led, line, panel, px, rrect, screws, shade, text, textWidth, vgrad } from '../primitives.js';
 import { C, KNOB, SELECTOR } from '../theme.js';
 
 const HEADER_H = 18;
@@ -155,8 +155,8 @@ export class DrumMachine {
     ctx.fillStyle = vgrad(ctx, by, h, t.bottom);
     ctx.fillRect(bx, by, w - bx, h - by);
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(bx, by, w - bx, 1);
-    if (bx) ctx.fillRect(bx, by, 1, h - by);
+    ctx.fillRect(bx, by, w - bx, px(1));
+    if (bx) ctx.fillRect(bx, by, px(1), h - by);
 
     this.drawHeader(ctx);
     if (this.stacked || state.ui.grid[cfg.id]) {

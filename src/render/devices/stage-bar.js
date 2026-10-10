@@ -3,7 +3,7 @@
 // instrument is shown is picked on the rail, see rail.js.)
 import { hits } from '../../ui/hits.js';
 import { click, tempoDrag } from '../../ui/handlers.js';
-import { button, icon, lcd, led, line, panel, sevenSeg, sevenSegWidth, text, textWidth } from '../primitives.js';
+import { button, icon, lcd, led, line, panel, sevenSeg, sevenSegWidth, shapeWidth, text, textWidth } from '../primitives.js';
 import { C } from '../theme.js';
 
 export const STAGE_BAR_H = 30;
@@ -118,7 +118,7 @@ export class StageBar {
     const off = button(ctx, x, y, bw, h, { pressed: hits.isPressed(key) });
     const [cx, cy, s, l] = [x + bw / 2, y + h / 2 + off, 5, 2.6];
     ctx.strokeStyle = C.inkLight;
-    ctx.lineWidth = 1.3;
+    shapeWidth(ctx, 1.3); // an icon: scales with its shape
     for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
       const [px, py] = [cx + dx * s, cy + dy * s];
       line(ctx, px, py, px - dx * l, py);

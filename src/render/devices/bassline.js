@@ -1,7 +1,7 @@
 import { hits } from '../../ui/hits.js';
 import { click, paintSteps, scrubSteps, toggle } from '../../ui/handlers.js';
 import { drawPatternTools, Knob, PatternSelector } from '../controls.js';
-import { brushed, button, circle, icon, keyboardKeys, led, line, miniKeyboard, MONO, panel, rrect, screws, text, textWidth, vgrad, waveIcon } from '../primitives.js';
+import { brushed, button, circle, icon, keyboardKeys, led, line, miniKeyboard, MONO, panel, px, rrect, screws, text, textWidth, vgrad, waveIcon } from '../primitives.js';
 import { C, KNOB, SELECTOR } from '../theme.js';
 
 export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B', 'C'];
@@ -135,7 +135,7 @@ export class Bassline {
     ctx.fillStyle = vgrad(ctx, SEQ_Y, h, C.bassSeq);
     ctx.fillRect(0, SEQ_Y, w, h - SEQ_Y);
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(0, SEQ_Y, w, 1);
+    ctx.fillRect(0, SEQ_Y, w, px(1));
 
     this.drawWaveSwitch(ctx, 46, this.L.knobY - 4);
     for (const k of this.knobs) k.draw(ctx, state);
@@ -267,7 +267,7 @@ export class Bassline {
       if (s.octave) icon(ctx, s.octave > 0 ? 'up' : 'down', cx, ROW.oct, 7 * tz, s.gate ? C.bassNote : C.bassNoteOff);
       else {
         ctx.fillStyle = 'rgba(255,255,255,0.15)';
-        ctx.fillRect(cx - 2.5 * tz, ROW.oct - 0.5, 5 * tz, 1);
+        ctx.fillRect(cx - 2.5 * tz, ROW.oct - px(0.5), 5 * tz, px(1));
       }
       led(ctx, cx, ROW.acc, 2.5 * tz, s.accent, C.ledOrange);
       led(ctx, cx, ROW.slide, 2.5 * tz, s.slide, C.ledGreen);

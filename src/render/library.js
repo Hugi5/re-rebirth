@@ -4,7 +4,7 @@
 import { OTHER_GROUP, pickSongs, SAVES_GROUP, shareFiles, STANDARD_GROUP } from '../song/library.js';
 import { hits } from '../ui/hits.js';
 import { click, release } from '../ui/handlers.js';
-import { brushed, button, lcd, led, MONO, panel, rgba, rrect, screws, text, textWidth, vgrad } from './primitives.js';
+import { brushed, button, lcd, led, MONO, panel, px, rgba, rrect, screws, shapeWidth, text, textWidth, vgrad } from './primitives.js';
 import { C } from './theme.js';
 
 const MAX_W = 980;
@@ -262,7 +262,7 @@ function drawGroup(ctx, g, y, W, view, collapsed) {
   ctx.fillStyle = 'rgba(255,255,255,0.06)';
   ctx.fillRect(PAD, y, W - PAD * 2, GROUP_H);
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(PAD, y + GROUP_H - 1, W - PAD * 2, 1);
+  ctx.fillRect(PAD, y + GROUP_H - px(1), W - PAD * 2, px(1));
   const cy = y + GROUP_H / 2 + 0.5;
   text(ctx, collapsed ? '\u25B8' : '\u25BE', PAD + 9, cy, { size: 10, color: C.inkMuted });
   led(ctx, PAD + 22, cy - 0.5, 2.6, g.loadable, C.ledGreen);
@@ -348,7 +348,7 @@ function shareHandler(app, ids, key) {
 function shareIcon(ctx, cx, cy, color) {
   ctx.save();
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1.3;
+  shapeWidth(ctx, 1.3); // an icon: scales with its shape
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();

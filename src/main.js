@@ -2,6 +2,7 @@ import './style.css';
 import { AudioEngine } from './audio/engine.js';
 import { loadDemo } from './demo.js';
 import { addedMessage, closeLibrary, openLibrary, SEARCH_PLACEHOLDER } from './render/library.js';
+import { setLineScale, thinLines } from './render/primitives.js';
 import { Rack } from './render/rack.js';
 import { viewClass, viewKey } from './render/views.js';
 import { Midi } from './midi.js';
@@ -17,6 +18,8 @@ import { stepKey } from './ui/step-keys.js';
 
 const canvas = document.getElementById('rack');
 const ctx = canvas.getContext('2d');
+// Strokes count in line units: at most one CSS pixel each, at any scale.
+thinLines(ctx);
 const state = new State();
 const engine = new AudioEngine(state);
 const clock = new Clock(state, engine);
@@ -105,6 +108,7 @@ function render() {
   const dpr = window.devicePixelRatio || 1;
   const s = viewScale * dpr;
   ctx.setTransform(s, 0, 0, s, 0, 0);
+  setLineScale(ctx);
   hits.clear();
   // Chrome gets its own exact scale too (view scale x k would differ in the
   // last bits per stage, and with it the anti-aliasing).

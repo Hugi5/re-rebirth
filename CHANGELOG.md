@@ -24,7 +24,7 @@
 - Press F to switch full screen on and off. In Chrome and Edge, Escape then closes About, the library or automation first and leaves full screen only from the rack (hold Escape to leave straight away); other browsers leave full screen on Escape as usual.
 
 ### Changed
-- Panel and button edges stay one pixel thin however large the view, and follow the rounded corners instead of poking out of them.
+- Lines stay fine however large the view: panel and button edges, rims, separators, tick marks and graph lines are at most one pixel wide, while controls, icons and type grow. Big views look crisp instead of blown up. Panel edges also follow the rounded corners instead of poking out of them.
 - Recording knob moves works the same way in the rack: a knob you move keeps your value (LATCH) instead of being pulled back by its old automation, and returns to the old curve when you stop, seek, or the loop comes round.
 - Re-Rebirth now lives at [rb.varyform.info](https://rb.varyform.info).
 - The song library's list is easier to read: bigger song titles, file names and stars.

@@ -77,21 +77,56 @@ export function textWidth(ctx, s, opts = {}) {
   return ctx.measureText(s).width + spacing;
 }
 
-// One CSS pixel in the current drawing units: for strokes that shouldn't
-// thicken as the view scales up (like SVG's non-scaling-stroke).
-export function hairline(ctx) {
+// Line unit. Shapes and type scale with the view, but strokes and hairline
+// details (bevels, rims, separators) stay at most 1 CSS px per unit however
+// large it's drawn, like SVG's non-scaling-stroke: a zoomed view stays crisp
+// instead of looking like a low-resolution UI blown up.
+// - thinLines(ctx) makes ctx.lineWidth count in line units, so every stroke
+//   follows without changes at the call sites;
+// - shapeWidth(ctx, w) sets a width that is part of a shape (knob pointer,
+//   icon) and should scale like it;
+// - px(n) converts line units to design units, for hairline geometry drawn
+//   with fills or offsets.
+// The views call setLineScale after setting each transform.
+let LINE = 1;
+let rawWidth = null;
+
+export const px = (n) => n * LINE;
+
+export function setLineScale(ctx) {
   const m = ctx.getTransform();
-  return (globalThis.devicePixelRatio || 1) / Math.hypot(m.a, m.b);
+  const css = Math.hypot(m.a, m.b) / (globalThis.devicePixelRatio || 1);
+  const prev = LINE;
+  LINE = Math.min(1, 1 / css);
+  return prev;
+}
+
+export function restoreLineScale(prev) {
+  LINE = prev;
+}
+
+export function thinLines(ctx) {
+  rawWidth = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(ctx), 'lineWidth');
+  Object.defineProperty(ctx, 'lineWidth', {
+    configurable: true,
+    get: () => rawWidth.get.call(ctx) / LINE,
+    set: (w) => rawWidth.set.call(ctx, w * LINE),
+  });
+}
+
+export function shapeWidth(ctx, w) {
+  if (rawWidth) rawWidth.set.call(ctx, w);
+  else ctx.lineWidth = w;
 }
 
 export function panel(ctx, x, y, w, h, stops, { radius = 2, bevel = 0.3 } = {}) {
   rrect(ctx, x, y, w, h, radius);
   ctx.fillStyle = vgrad(ctx, y, y + h, stops);
   ctx.fill();
-  // Bevel: a lit top-left edge and a shaded bottom-right one, a hairline at any
-  // scale, following the rounded corners and meeting diagonally at the other two.
-  const lw = Math.min(1, hairline(ctx));
-  const i = lw / 2;
+  // Bevel: a lit top-left edge and a shaded bottom-right one, following the
+  // rounded corners and meeting diagonally at the other two.
+  const lw = 1;
+  const i = px(lw) / 2;
   const r = Math.max(0, radius - i);
   const [l, t, rt, b] = [x + i + r, y + i + r, x + w - i - r, y + h - i - r]; // corner centres
   const q = Math.PI / 4;
@@ -177,7 +212,7 @@ export function screw(ctx, cx, cy, r = 3.4, angle = 0.6) {
   ctx.translate(cx, cy);
   ctx.rotate(angle);
   ctx.strokeStyle = 'rgba(30,30,30,0.85)';
-  ctx.lineWidth = r * 0.28;
+  shapeWidth(ctx, r * 0.28);
   ctx.lineCap = 'round';
   line(ctx, -r * 0.55, 0, r * 0.55, 0);
   line(ctx, 0, -r * 0.55, 0, r * 0.55);
@@ -241,7 +276,7 @@ export function knob(ctx, cx, cy, r, value, s, { ticks = 11 } = {}) {
     ctx.strokeStyle = 'rgba(255,255,255,0.18)';
     ctx.lineWidth = 0.6;
     ctx.beginPath();
-    ctx.arc(cx, cy, rc - 0.3, Math.PI * 1.05, Math.PI * 1.75);
+    ctx.arc(cx, cy, rc - px(0.3), Math.PI * 1.05, Math.PI * 1.75);
     ctx.stroke();
   }
 
@@ -251,7 +286,7 @@ export function knob(ctx, cx, cy, r, value, s, { ticks = 11 } = {}) {
   ctx.lineCap = 'round';
   for (const [color, from, to, width] of s.pointers) {
     ctx.strokeStyle = color;
-    ctx.lineWidth = Math.max(0.9, r * width);
+    shapeWidth(ctx, Math.max(0.9, r * width));
     line(ctx, cx + ca * r * from, cy + sa * r * from, cx + ca * r * to, cy + sa * r * to);
   }
 }
@@ -265,7 +300,7 @@ export function led(ctx, cx, cy, r, on, color = C.ledRed) {
     circle(ctx, cx, cy, r * 3.5);
     ctx.fill();
   }
-  circle(ctx, cx, cy + 0.3, r + 0.9);
+  circle(ctx, cx, cy + px(0.3), r + px(0.9));
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
   ctx.fill();
   const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.05, cx, cy, r);
@@ -288,7 +323,7 @@ export function led(ctx, cx, cy, r, on, color = C.ledRed) {
 export function ledBar(ctx, x, y, w, h, on, color) {
   if (on) {
     ctx.fillStyle = rgba(color, 0.25);
-    ctx.fillRect(x - 1.5, y - 1.5, w + 3, h + 3);
+    ctx.fillRect(x - px(1.5), y - px(1.5), w + px(3), h + px(3));
   }
   ctx.fillStyle = on ? color : shade(color, -0.8);
   ctx.fillRect(x, y, w, h);
@@ -298,18 +333,17 @@ export function ledBar(ctx, x, y, w, h, on, color) {
 
 // Returns the vertical press offset so callers can shift face labels with it.
 export function button(ctx, x, y, w, h, { face = C.btnDark, pressed = false, radius = 2 } = {}) {
-  const off = pressed ? 1 : 0;
-  rrect(ctx, x - 0.6, y - 0.6, w + 1.2, h + 2.6, radius + 0.6);
+  // Rim, depth below and press travel are hairline details (line units).
+  const off = pressed ? px(1) : 0;
+  rrect(ctx, x - px(0.6), y - px(0.6), w + px(1.2), h + px(2.6), radius + px(0.6));
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.fill();
   rrect(ctx, x, y + off, w, h, radius);
   ctx.fillStyle = vgrad(ctx, y + off, y + off + h, face);
   ctx.fill();
-  // Top highlight, a hairline at any scale.
-  const lw = Math.min(0.7, hairline(ctx));
   ctx.strokeStyle = pressed ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.35)';
-  ctx.lineWidth = lw;
-  line(ctx, x + radius, y + off + lw / 2 + 0.25, x + w - radius, y + off + lw / 2 + 0.25);
+  ctx.lineWidth = 0.7;
+  line(ctx, x + radius, y + off + px(0.6), x + w - radius, y + off + px(0.6));
   return off;
 }
 
@@ -328,10 +362,10 @@ export function fader(ctx, x, y, w, h, value, { cap = C.faderCap, tickColor = 'r
   ctx.fillStyle = '#050505';
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-  line(ctx, cx - 1.6, y + h + 0.5, cx + 1.6, y + h + 0.5);
+  line(ctx, cx - 1.6, y + h + px(0.5), cx + 1.6, y + h + px(0.5));
 
   const cy = y + (h - capH) * (1 - clamp01(value));
-  rrect(ctx, x + 1, cy + 1.5, w - 2, capH, 1.5);
+  rrect(ctx, x + 1, cy + px(1.5), w - 2, capH, 1.5);
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.fill();
   rrect(ctx, x + 1, cy, w - 2, capH, 1.5);
@@ -344,16 +378,16 @@ export function fader(ctx, x, y, w, h, value, { cap = C.faderCap, tickColor = 'r
   ctx.strokeStyle = '#1a1a1a';
   line(ctx, x + 2.5, cy + capH / 2, x + w - 2.5, cy + capH / 2);
   ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-  line(ctx, x + 2.5, cy + capH / 2 + 1, x + w - 2.5, cy + capH / 2 + 1);
+  line(ctx, x + 2.5, cy + capH / 2 + px(1), x + w - 2.5, cy + capH / 2 + px(1));
 }
 
 export function lcd(ctx, x, y, w, h, stops = C.lcd, radius = 2) {
-  rrect(ctx, x - 1, y - 1, w + 2, h + 2, radius + 1);
+  rrect(ctx, x - px(1), y - px(1), w + px(2), h + px(2), radius + px(1));
   ctx.fillStyle = 'rgba(0,0,0,0.65)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.14)';
   ctx.lineWidth = 0.8;
-  line(ctx, x, y + h + 1.4, x + w, y + h + 1.4);
+  line(ctx, x, y + h + px(1.4), x + w, y + h + px(1.4));
   rrect(ctx, x, y, w, h, radius);
   ctx.fillStyle = vgrad(ctx, y, y + h, stops);
   ctx.fill();
@@ -429,7 +463,7 @@ export function sevenSeg(ctx, str, x, y, dw, dh, opts = {}) {
       ctx.closePath();
       if (lit.includes(k)) {
         ctx.strokeStyle = rgba(on, 0.3);
-        ctx.lineWidth = thick * 0.9;
+        shapeWidth(ctx, thick * 0.9);
         ctx.stroke();
         ctx.fillStyle = on;
       } else {
@@ -540,7 +574,7 @@ export function icon(ctx, kind, cx, cy, s, color) {
       ctx.closePath();
       ctx.save();
       ctx.strokeStyle = color;
-      ctx.lineWidth = s * 0.14;
+      shapeWidth(ctx, s * 0.14);
       ctx.beginPath();
       ctx.arc(cx, cy, s * 0.36, Math.PI * 0.25, Math.PI * 1.95);
       ctx.stroke();
@@ -558,7 +592,7 @@ export function icon(ctx, kind, cx, cy, s, color) {
 export function waveIcon(ctx, kind, cx, cy, s, color) {
   const h = s / 2;
   ctx.strokeStyle = color;
-  ctx.lineWidth = 1;
+  shapeWidth(ctx, 1);
   ctx.lineJoin = 'miter';
   ctx.beginPath();
   if (kind === 'saw') {

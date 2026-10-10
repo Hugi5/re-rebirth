@@ -4,7 +4,7 @@ import { CHANNELS, COMP_TARGETS, PCF_TARGETS } from '../../channels.js';
 import { hits } from '../../ui/hits.js';
 import { click, knobDrag, toggle } from '../../ui/handlers.js';
 import { Knob } from '../controls.js';
-import { brushed, button, circle, icon, lcd, led, ledBar, line, MONO, panel, rgba, rrect, sevenSeg, sevenSegWidth, shade, text, vgrad } from '../primitives.js';
+import { brushed, button, circle, icon, lcd, led, ledBar, line, MONO, panel, px, rgba, rrect, sevenSeg, sevenSegWidth, shade, text, vgrad } from '../primitives.js';
 import { C } from '../theme.js';
 import { spectrumDisplay } from '../spectrum.js';
 import { vuMeter } from '../vu-meter.js';
@@ -207,7 +207,7 @@ export class EffectsColumn {
 
   drawCompCurve(ctx, x, y, s, on, fx) {
     const LO = -60; // dB at the plot's left / bottom; 0 dB at the right / top
-    const px = (db) => x + ((db - LO) / -LO) * s;
+    const dbX = (db) => x + ((db - LO) / -LO) * s;
     const py = (db) => y + s - ((db - LO) / -LO) * s;
     const { thresholdDb: T, slope, makeupDb } = compCurve(this.state.get('fx.comp.threshold'), this.state.get('fx.comp.amount'));
     const out = (db) => {
@@ -225,14 +225,14 @@ export class EffectsColumn {
     ctx.strokeStyle = rgba(C.lcdGreenDim, 0.35);
     ctx.lineWidth = 0.5;
     for (let db = LO + 12; db < 0; db += 12) {
-      line(ctx, px(db), y, px(db), y + s);
+      line(ctx, dbX(db), y, dbX(db), y + s);
       line(ctx, x, py(db), x + s, py(db));
     }
     ctx.setLineDash([1.5, 1.5]);
     ctx.strokeStyle = rgba(C.lcdGreenDim, 0.8);
-    line(ctx, px(LO), py(LO), px(0), py(0));
+    line(ctx, dbX(LO), py(LO), dbX(0), py(0));
     ctx.strokeStyle = rgba(C.ledYellow, on ? 0.55 : 0.2);
-    line(ctx, px(T), y, px(T), y + s);
+    line(ctx, dbX(T), y, dbX(T), y + s);
     ctx.setLineDash([]);
 
     // The curve, glowing while routed.
@@ -240,7 +240,7 @@ export class EffectsColumn {
       ctx.beginPath();
       for (let db = LO; db <= 0; db += 0.5) {
         const fn = db === LO ? 'moveTo' : 'lineTo';
-        ctx[fn](px(db), py(out(db)));
+        ctx[fn](dbX(db), py(out(db)));
       }
     };
     if (on) {
@@ -262,11 +262,11 @@ export class EffectsColumn {
         if (!p) return;
         const a = ((i + 1) / trail.length) * 0.45;
         ctx.fillStyle = rgba(C.lcdGreenOn, a);
-        circle(ctx, px(p[0]), py(p[0] + p[1]), 1 + a * 2);
+        circle(ctx, dbX(p[0]), py(p[0] + p[1]), 1 + a * 2);
         ctx.fill();
       });
       if (fx.compLevel !== null && fx.compLevel !== undefined) {
-        const cx = px(fx.compLevel);
+        const cx = dbX(fx.compLevel);
         const cy = py(fx.compLevel + fx.compGain);
         const hot = -(fx.compReduction ?? 0) > 12 ? C.ledRed : -(fx.compReduction ?? 0) > 3 ? C.ledYellow : C.lcdGreenOn;
         const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 7);
@@ -365,7 +365,7 @@ export class EffectsColumn {
       const pos = Math.min(1, Math.max(0, Math.log2(hz / 30) / Math.log2(14000 / 30)));
       const ly = top + maxH - pos * maxH;
       ctx.fillStyle = C.ledYellow;
-      ctx.fillRect(x + 4, ly - 0.5, w - 8, 1);
+      ctx.fillRect(x + 4, ly - px(0.5), w - 8, px(1));
       text(ctx, hz >= 1000 ? `${(hz / 1000).toFixed(1)}k` : `${Math.round(hz)}`, x + w - 5, y + 7, { size: 5.5, family: MONO, align: 'right', color: C.ledYellow });
     }
     hits.rect(ctx, x, y, w, h, knobDrag(state, 'fx.pcf.wave'));

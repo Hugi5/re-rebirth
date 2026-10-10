@@ -3,7 +3,7 @@ import pkg from '../../package.json' with { type: 'json' };
 import { hits } from '../ui/hits.js';
 import { click, release } from '../ui/handlers.js';
 import { drawLogo } from './logo.js';
-import { brushed, button, lcd, led, MONO, panel, screws, text, textWidth, vgrad } from './primitives.js';
+import { brushed, button, lcd, led, MONO, panel, px, screws, text, textWidth, vgrad } from './primitives.js';
 import { C } from './theme.js';
 
 const W = 380;
@@ -66,9 +66,9 @@ export function drawAbout(ctx, rackW, rackH, state, app) {
   text(ctx, `\u00A9 ${COPY.year} ${COPY.author}`, W - 87, 59, { size: 6.5, family: MONO, color: C.lcdGreenMid });
 
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
-  ctx.fillRect(18, 86, W - 36, 1);
+  ctx.fillRect(18, 86, W - 36, px(1));
   ctx.fillStyle = 'rgba(255,255,255,0.08)';
-  ctx.fillRect(18, 87, W - 36, 1);
+  ctx.fillRect(18, 86 + px(1), W - 36, px(1));
 
   COPY.lines.forEach((line, i) => text(ctx, line, 24, 102 + i * 14, { size: 6.8, weight: 600, align: 'left', color: C.inkLight }));
   drawSongsLink(ctx, 24, 172);

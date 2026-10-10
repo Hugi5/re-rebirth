@@ -9,7 +9,7 @@ import { DRUM_STACKED_MIN, DrumMachine, R808, R909 } from './devices/drum-machin
 import { Rail, RAIL_STRIPS, RAIL_W } from './devices/rail.js';
 import { keysHint, STAGE_BAR_H, STAGE_BAR_MIN_W, StageBar } from './devices/stage-bar.js';
 import { Timeline, TIMELINE_H } from './devices/timeline.js';
-import { MONO, rgba, rrect, text, textWidth } from './primitives.js';
+import { MONO, restoreLineScale, rgba, rrect, setLineScale, text, textWidth } from './primitives.js';
 import { C } from './theme.js';
 import { drawWindows } from './windows.js';
 
@@ -111,7 +111,9 @@ class FocusView {
     ctx.fillRect(0, 0, this.width, this.height);
     ctx.save();
     ctx.setTransform(chromeScale, 0, 0, chromeScale, 0, 0);
+    const lines = setLineScale(ctx);
     for (const d of this.chrome) drawAt(ctx, d);
+    restoreLineScale(lines);
     ctx.restore();
     for (const d of this.devices) drawAt(ctx, d);
     // Notices (the rack shows them in its song display), at chrome size.
@@ -119,7 +121,9 @@ class FocusView {
     if (notice) {
       ctx.save();
       ctx.setTransform(chromeScale, 0, 0, chromeScale, 0, 0);
+      const toastLines = setLineScale(ctx);
       drawToast(ctx, notice, this.width / this.k, this.height / this.k);
+      restoreLineScale(toastLines);
       ctx.restore();
     }
     drawWindows(ctx, this.width, this.height, state, this.app);
