@@ -1,6 +1,6 @@
 // Compact transport for the focus stages, one row: stage tabs, play controls,
-// tempo and position on the left; the stage's own options (what to show) and
-// full screen on the right.
+// tempo and position on the left; MIDI and full screen on the right. (Which
+// instrument is shown is picked on the rail, see rail.js.)
 import { hits } from '../../ui/hits.js';
 import { click, tempoDrag } from '../../ui/handlers.js';
 import { button, icon, lcd, led, line, panel, sevenSeg, sevenSegWidth, text, textWidth } from '../primitives.js';
@@ -26,9 +26,8 @@ const GROUP_GAP = 8;
 const MIDI_LED = { off: null, waiting: C.ledYellow, on: C.ledGreen, denied: C.ledRed };
 
 export class StageBar {
-  // options: [[value, label], ...] for the stage's own selector; current(), pick(value).
-  constructor(state, app, x, y, w, { options = [], current, pick } = {}) {
-    Object.assign(this, { state, app, x, y, w, h: STAGE_BAR_H, options, current, pick });
+  constructor(state, app, x, y, w) {
+    Object.assign(this, { state, app, x, y, w, h: STAGE_BAR_H });
   }
 
   draw(ctx) {
@@ -43,10 +42,7 @@ export class StageBar {
 
     let rx = w - 8;
     rx -= this.drawFullscreen(ctx, rx) + 3;
-    rx -= this.drawMidi(ctx, rx) + GROUP_GAP;
-    for (const [value, label] of [...this.options].reverse()) {
-      rx -= tab(ctx, rx, ROW, label, this.current?.() === value, () => this.pick(value), `stage.opt.${value}`, 'right') + 3;
-    }
+    this.drawMidi(ctx, rx);
   }
 
   // Connects MIDI, then toggles MIDI learn (lit, reading LEARN). The LED shows

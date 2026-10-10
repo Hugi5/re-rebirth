@@ -82,7 +82,7 @@ function notify(message) {
 
 function render() {
   frame = 0;
-  // A stage or SHOW change: lay out again (resize renders).
+  // A stage or instrument change: lay out again (resize renders).
   if (viewKey(state) !== view.key) return resize();
   // Draw in design units; the transform handles window scale + HiDPI. One exact
   // scale for both axes (not canvas size / view size, which carries rounding),
@@ -111,24 +111,25 @@ function animate() {
 // the view's minScale, 1:1 for the rack), and the view is rebuilt wider or
 // taller to use the rest, up to its stretch limit. Smaller windows scroll,
 // like the original rack did.
-// A view's chrome (the stage bar, `chrome` units tall above the devices) is
-// scaled to fit the view's `reference` layout (chrome included), so it keeps
-// one size on screen while the devices under it change; the devices fit the
-// room left under it.
+// A view's chrome (`chrome` units tall above the devices, `chromeLeft` wide
+// beside them) is scaled to fit the view's `reference` layout (chrome
+// included), so it keeps one size on screen while the devices change; the
+// devices fit the room left.
 function resize() {
   const W = window.innerWidth;
   const H = window.innerHeight;
   const View = viewClass(state);
-  const { min, stretch, chrome = 0, chromeW = 0, minScale = 1, reference = { w: min.w, h: min.h + chrome } } = View.size(state);
+  const { min, stretch, chrome = 0, chromeLeft = 0, chromeW = 0, minScale = 1, reference = { w: min.w + chromeLeft, h: min.h + chrome } } = View.size(state);
   const chromeFit = Math.max(minScale, Math.min(W / reference.w, H / reference.h));
+  const freeW = W - chromeLeft * chromeFit;
   const free = H - chrome * chromeFit;
-  const scale = Math.max(minScale, Math.min(W / min.w, free / min.h));
+  const scale = Math.max(minScale, Math.min(freeW / min.w, free / min.h));
   const k = chromeFit / scale;
   // Never narrower than the chrome needs at its scale, even past the stretch limit.
-  const floorW = Math.max(min.w, chromeW * k);
+  const floorW = Math.max(min.w, (chromeW - chromeLeft) * k);
   // Fractional on purpose: a view that fills the window then measures exactly
   // W x H CSS pixels, whatever its scale.
-  const width = Math.min(Math.max(min.w * stretch.w, floorW), Math.max(floorW, W / scale));
+  const width = Math.min(Math.max(min.w * stretch.w, floorW), Math.max(floorW, freeW / scale)) + chromeLeft * k;
   const height = Math.min(min.h * stretch.h, Math.max(min.h, free / scale)) + chrome * k;
   const stale = width !== view.width || height !== view.height || viewKey(state) !== view.key || (chrome && k !== view.chromeScale);
   if (stale) view = new View(state, app, width, height, k);

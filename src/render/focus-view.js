@@ -1,10 +1,12 @@
 // Focus stages: the one instrument being worked on, as large as the window
 // allows, in its stacked layout (full-width step grid; the drum machines
-// always show all lanes). Above it, chrome that keeps one size whatever SHOW
-// picks: the stage bar, and in AUTOMATE the loop timeline.
+// always show all lanes). Around it, chrome that keeps one size whatever the
+// stage or instrument: the stage bar on top, the instrument rail down the
+// left, and in AUTOMATE the loop timeline above the instrument.
 import { BASS_IDS } from '../state.js';
 import { BASS_STACKED_MIN, Bassline } from './devices/bassline.js';
 import { DRUM_STACKED_MIN, DrumMachine, R808, R909 } from './devices/drum-machine.js';
+import { Rail, RAIL_STRIPS, RAIL_W } from './devices/rail.js';
 import { keysHint, STAGE_BAR_H, STAGE_BAR_MIN_W, StageBar } from './devices/stage-bar.js';
 import { Timeline, TIMELINE_H } from './devices/timeline.js';
 import { MONO, rgba, rrect, text, textWidth } from './primitives.js';
@@ -13,17 +15,13 @@ import { drawWindows } from './windows.js';
 
 const MARGIN = 6;
 const GAP = 6;
-
-export const SHOWS = [
-  ['bass1', 'BASS 1'],
-  ['bass2', 'BASS 2'],
-  ['r808', '808'],
-  ['r909', '909'],
-];
+// Chrome left of the instrument (rail + its margin), and on top of it.
+const CHROME_LEFT = MARGIN + RAIL_W;
+const BAR_BOTTOM = MARGIN + STAGE_BAR_H;
 const DRUMS = { r808: R808, r909: R909 };
 
 // Kept as a list: the layout code stacks any number of devices.
-export const shownDevices = (state) => [SHOWS.some(([id]) => id === state.ui.show) ? state.ui.show : SHOWS[0][0]];
+export const shownDevices = (state) => [RAIL_STRIPS.some(([id]) => id === state.ui.show) ? state.ui.show : RAIL_STRIPS[0][0]];
 const minSize = (id) => (DRUMS[id] ? DRUM_STACKED_MIN : BASS_STACKED_MIN);
 // Devices only; the chrome is sized apart (see main.js resize).
 function devicesSize(ids) {
@@ -41,20 +39,21 @@ class FocusView {
   }
 
   static chromeH() {
-    return MARGIN + STAGE_BAR_H + (this.timeline ? GAP + TIMELINE_H : 0);
+    return BAR_BOTTOM + (this.timeline ? GAP + TIMELINE_H : 0);
   }
 
   // Two scales. The chrome takes the scale PATTERNS with one bass line would
-  // get, whatever the stage or SHOW, so the bar never changes size; the
-  // devices take whatever scale fits the room left under this stage's chrome.
-  // Either way the devices then stretch to fill the window, any proportion.
+  // get, whatever the stage or instrument, so it never changes size; the
+  // devices take whatever scale fits the room left beside and under this
+  // stage's chrome. Either way they then stretch to fill the window.
   static size(state) {
     const bass = devicesSize(['bass1']);
     return {
       min: devicesSize(shownDevices(state)),
       chrome: this.chromeH(),
+      chromeLeft: CHROME_LEFT,
       chromeW: STAGE_BAR_MIN_W + MARGIN * 2,
-      reference: { w: bass.w, h: bass.h + MARGIN + STAGE_BAR_H },
+      reference: { w: CHROME_LEFT + bass.w, h: BAR_BOTTOM + bass.h },
       stretch: { w: Infinity, h: Infinity },
       // Under the AUTOMATE timeline a short window can need a bit under 1:1;
       // still bigger than in the rack.
@@ -71,20 +70,19 @@ class FocusView {
     this.chromeScale = chromeScale;
     this.k = k;
     const ids = shownDevices(state);
-    state.ui.show = ids[0]; // a SHOW choice saved by an older version
+    state.ui.show = ids[0]; // a choice saved by an older version ("1 + 2")
 
-    const chromeW = width / k - MARGIN * 2;
-    this.chrome = [
-      new StageBar(state, app, MARGIN, MARGIN, chromeW, {
-        options: SHOWS,
-        current: () => state.ui.show,
-        pick: (id) => (state.ui.show = id),
-      }),
-    ];
-    if (V.timeline) this.chrome.push(new Timeline(state, app, MARGIN, MARGIN + STAGE_BAR_H + GAP, chromeW, TIMELINE_H, ids));
+    // Chrome, in chrome units: the bar across, the rail from under it to the
+    // bottom, the timeline right of the rail.
+    const W = width / k;
+    const H = height / k;
+    const rightX = CHROME_LEFT + MARGIN;
+    this.chrome = [new StageBar(state, app, MARGIN, MARGIN, W - MARGIN * 2), new Rail(state, app, MARGIN, BAR_BOTTOM + GAP, RAIL_W, H - BAR_BOTTOM - GAP - MARGIN)];
+    if (V.timeline) this.chrome.push(new Timeline(state, app, rightX, BAR_BOTTOM + GAP, W - rightX - MARGIN, TIMELINE_H, ids));
 
     // Extra height goes to the devices in proportion to their minimum heights.
-    const w = width - MARGIN * 2;
+    const x = CHROME_LEFT * k + MARGIN;
+    const w = width - x - MARGIN;
     const mins = ids.map((id) => minSize(id).h);
     const chromeBottom = V.chromeH() * k;
     const room = height - chromeBottom - MARGIN - GAP * ids.length;
@@ -93,8 +91,8 @@ class FocusView {
     this.devices = ids.map((id, i) => {
       const h = (room * mins[i]) / total;
       const d = DRUMS[id]
-        ? new DrumMachine(state, app, MARGIN, y, w, h, DRUMS[id], { stacked: true })
-        : new Bassline(state, app, MARGIN, y, w, h, {
+        ? new DrumMachine(state, app, x, y, w, h, DRUMS[id], { stacked: true })
+        : new Bassline(state, app, x, y, w, h, {
           id,
           number: BASS_IDS.indexOf(id) + 1,
           stacked: true,
