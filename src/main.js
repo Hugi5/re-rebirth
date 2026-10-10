@@ -95,15 +95,25 @@ function animate() {
 // 1:1, times the stage's zoom), and the view is rebuilt wider or taller to use
 // the rest, up to its stretch limit. Smaller windows (or zoom past the fit)
 // scroll, like the original rack did.
+// A view's chrome (the stage bar, `chrome` units tall above the devices) is
+// scaled as if the view were its `reference` layout, so it keeps one size on
+// screen while the devices under it change.
 function resize() {
   const W = window.innerWidth;
   const H = window.innerHeight;
   const View = viewClass(state);
-  const { min, stretch } = View.size(state);
-  const scale = Math.max(1, Math.min(W / min.w, H / min.h)) * zoomOf(state);
-  const width = Math.round(Math.min(min.w * stretch.w, Math.max(min.w, W / scale)));
-  const height = Math.round(Math.min(min.h * stretch.h, Math.max(min.h, H / scale)));
-  if (width !== view.width || height !== view.height || viewKey(state) !== view.key) view = new View(state, app, width, height);
+  const zoom = zoomOf(state);
+  const { min, stretch, chrome = 0, chromeW = 0, reference = min } = View.size(state);
+  const chromeScale = Math.max(1, Math.min(W / reference.w, H / (reference.h + chrome))) * zoom;
+  const free = H - chrome * chromeScale;
+  const scale = Math.max(1, Math.min(W / min.w, free / min.h)) * zoom;
+  const k = chromeScale / scale;
+  // Never narrower than the chrome needs at its scale, even past the stretch limit.
+  const floorW = Math.max(min.w, chromeW * k);
+  const width = Math.round(Math.min(Math.max(min.w * stretch.w, floorW), Math.max(floorW, W / scale)));
+  const height = Math.round(Math.min(min.h * stretch.h, Math.max(min.h, free / scale)) + chrome * k);
+  const stale = width !== view.width || height !== view.height || viewKey(state) !== view.key || (chrome && k !== view.chromeScale);
+  if (stale) view = new View(state, app, width, height, k);
   if (layoutKey(state) !== layout) {
     layout = layoutKey(state);
     savePrefs(state.ui);

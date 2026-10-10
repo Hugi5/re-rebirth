@@ -8,6 +8,9 @@ import { button, icon, lcd, led, MONO, panel, sevenSeg, sevenSegWidth, text, tex
 import { C } from '../theme.js';
 
 export const STAGE_BAR_H = 60;
+// Narrowest bar that fits every button: a stacked bass line's width, so the
+// bar never widens the PATTERNS reference layout.
+export const STAGE_BAR_MIN_W = 580;
 export const STAGES = [
   ['rack', 'RACK'],
   ['patterns', 'PATTERNS'],
