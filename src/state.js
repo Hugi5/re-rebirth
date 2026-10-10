@@ -26,8 +26,9 @@ export class State {
     // App chrome, not part of a song. automation: the open view's scroll/zoom, or
     // null when closed; grid: drum machines showing all lanes instead of knobs;
     // masterView: the master module's meters, 'vu' needles or 'spectrum'.
-    // stage: the view ('rack' or a focus stage); show: which devices PATTERNS
-    // shows; zoom: per stage; keysTarget/octave: computer-keyboard step entry.
+    // stage: the view ('rack' or a focus stage); show: the device the focus
+    // stages show; octave: computer-keyboard step entry;
+    // recMode: how a recording pass writes touched knobs, 'latch' or 'touch'.
     this.ui = {
       about: false,
       automation: null,
@@ -36,9 +37,9 @@ export class State {
       masterView: 'vu',
       stage: 'rack',
       show: 'bass1',
-      zoom: {},
-      keysTarget: 'bass1',
+
       octave: 0,
+      recMode: 'latch',
     };
     this.clearSong();
   }
@@ -86,9 +87,10 @@ export class State {
   // `source` lets the song recorder skip changes made by song playback itself.
   set(key, value, source = 'user') {
     const v = Math.min(1, Math.max(0, value));
-    if (this.params.get(key) === v) return;
+    const prev = this.params.get(key);
+    if (prev === v) return;
     this.params.set(key, v);
-    this.emit('param', { key, value: v, source });
+    this.emit('param', { key, value: v, prev, source });
   }
 
   toggle(key) {

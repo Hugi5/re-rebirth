@@ -3,7 +3,7 @@ import { AudioEngine } from './audio/engine.js';
 import { loadDemo } from './demo.js';
 import { addedMessage, closeLibrary, openLibrary, SEARCH_PLACEHOLDER } from './render/library.js';
 import { Rack } from './render/rack.js';
-import { layoutKey, viewClass, viewKey, zoomOf } from './render/views.js';
+import { viewClass, viewKey } from './render/views.js';
 import { Clock } from './sequencer/clock.js';
 import { Files } from './song/files.js';
 import { collectDropped, Library } from './song/library.js';
@@ -45,7 +45,6 @@ const app = { clock, engine, files, library, notify, toggleFullscreen };
 // before loading, whatever stage is shown.
 let view = new Rack(state, app);
 let viewScale = 1;
-let layout = null;
 
 if (!files.restore()) loadDemo(state);
 loadPrefs(state.ui);
@@ -73,8 +72,8 @@ function notify(message) {
 
 function render() {
   frame = 0;
-  // A stage, SHOW or zoom change: lay out again (resize renders).
-  if (layoutKey(state) !== layout) return resize();
+  // A stage or SHOW change: lay out again (resize renders).
+  if (viewKey(state) !== view.key) return resize();
   // Draw in design units; the transform handles window scale + HiDPI. One exact
   // scale for both axes (not canvas size / view size, which carries rounding),
   // so the stage bar lands on the same pixels whichever devices are below it.
@@ -96,9 +95,9 @@ function animate() {
 }
 
 // Fill the window: one uniform scale (fit the tighter dimension, never below
-// 1:1, times the stage's zoom), and the view is rebuilt wider or taller to use
-// the rest, up to its stretch limit. Smaller windows (or zoom past the fit)
-// scroll, like the original rack did.
+// the view's minScale, 1:1 for the rack), and the view is rebuilt wider or
+// taller to use the rest, up to its stretch limit. Smaller windows scroll,
+// like the original rack did.
 // A view's chrome (the stage bar, `chrome` units tall above the devices) is
 // scaled as if the view were its `reference` layout, so it keeps one size on
 // screen while the devices under it change.
@@ -106,11 +105,10 @@ function resize() {
   const W = window.innerWidth;
   const H = window.innerHeight;
   const View = viewClass(state);
-  const zoom = zoomOf(state);
-  const { min, stretch, chrome = 0, chromeW = 0, reference = min } = View.size(state);
-  const chromeScale = Math.max(1, Math.min(W / reference.w, H / (reference.h + chrome))) * zoom;
+  const { min, stretch, chrome = 0, chromeW = 0, reference = min, minScale = 1 } = View.size(state);
+  const chromeScale = Math.max(minScale, Math.min(W / reference.w, H / (reference.h + chrome)));
   const free = H - chrome * chromeScale;
-  const scale = Math.max(1, Math.min(W / min.w, free / min.h)) * zoom;
+  const scale = Math.max(minScale, Math.min(W / min.w, free / min.h));
   const k = chromeScale / scale;
   // Never narrower than the chrome needs at its scale, even past the stretch limit.
   const floorW = Math.max(min.w, chromeW * k);
@@ -120,10 +118,6 @@ function resize() {
   const height = Math.min(min.h * stretch.h, Math.max(min.h, free / scale)) + chrome * k;
   const stale = width !== view.width || height !== view.height || viewKey(state) !== view.key || (chrome && k !== view.chromeScale);
   if (stale) view = new View(state, app, width, height, k);
-  if (layoutKey(state) !== layout) {
-    layout = layoutKey(state);
-    savePrefs(state.ui);
-  }
   viewScale = scale;
   // The epsilon keeps float error (1439.9999) from losing a pixel.
   const cssW = Math.floor(view.width * scale + 1e-6);
@@ -212,6 +206,7 @@ canvas.addEventListener('pointerdown', () => search.input.blur());
 attachPointer(canvas, () => {
   requestRender();
   files.autosave();
+  savePrefs(state.ui);
 });
 // Drop anywhere: one song file opens it; several files or folders go to the library.
 window.addEventListener('dragover', (e) => e.preventDefault());

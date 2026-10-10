@@ -99,8 +99,9 @@ function stackedLayout(w, h) {
 const NEXT_OCTAVE = { 0: 1, 1: -1, '-1': 0 };
 
 export class Bassline {
-  constructor(state, app, x, y, w, h, { id, number, stacked = false }) {
-    Object.assign(this, { state, app, x, y, w, h, id, number });
+  // subtitle: optional () => string shown instead of the model name (a hint).
+  constructor(state, app, x, y, w, h, { id, number, stacked = false, subtitle = null }) {
+    Object.assign(this, { state, app, x, y, w, h, id, number, subtitle });
     const L = (this.L = layout(w, h, stacked));
     const P = (k) => `${id}.${k}`;
     this.waveParam = P('waveform');
@@ -148,8 +149,17 @@ export class Bassline {
     led(ctx, tx + 24, 9, 2.3, state.on01(this.onParam), C.ledGreen);
     text(ctx, 'ON', tx + 30, 9.5, { size: 6, align: 'left', color: C.inkMuted });
     hits.rect(ctx, tx + 19, 2, 26, 14, toggle(state, this.onParam));
-    text(ctx, 'ANALOG BASS SYNTHESIZER', tx + 52, 9.5, { size: 6, align: 'left', color: C.inkMuted, spacing: 1.2 });
-    drawPatternTools(ctx, { state, id: this.id, right: w - 10, led: C.ledRed });
+    const left = drawPatternTools(ctx, { state, id: this.id, right: w - 10, led: C.ledRed });
+    if (!this.subtitle) {
+      text(ctx, 'ANALOG BASS SYNTHESIZER', tx + 52, 9.5, { size: 6, align: 'left', color: C.inkMuted, spacing: 1.2 });
+      return;
+    }
+    // A hint gets the room up to the pattern tools, smaller if it must.
+    const hint = this.subtitle();
+    const opts = { size: 6, weight: 700, align: 'left', color: C.bassNote, spacing: 0.2 };
+    const fit = (left - 10 - (tx + 52)) / textWidth(ctx, hint, opts);
+    if (fit < 1) opts.size *= Math.max(0.6, fit);
+    text(ctx, hint, tx + 52, 9.5, opts);
   }
 
   drawWaveSwitch(ctx, cx, cy) {
@@ -186,13 +196,11 @@ export class Bassline {
     const sel = steps[dev.selectedStep];
     const audition = () => this.app.engine.auditionBass(id, sel);
     const { row: ROW, noteTop: NOTE_TOP, gridBottom: GRID_BOTTOM, keyboard: KEYBOARD, stepW: STEP_W, gridX: GRID_X, labelX, cellW } = this.L;
-    const touch = () => (state.ui.keysTarget = id);
 
     // Keys enter a note on the selected step; black keys register last so they win.
     miniKeyboard(ctx, ...KEYBOARD, { active: sel.gate ? sel.note : -1 });
     for (const k of keyboardKeys(...KEYBOARD)) {
       hits.rect(ctx, k.x, k.y, k.w, k.h, click(() => {
-        touch();
         Object.assign(sel, { note: k.note, gate: true, tie: false });
         audition();
       }));
@@ -205,7 +213,7 @@ export class Bassline {
       const off = button(ctx, bx, by, 48, 22, { face: C.bassPad, pressed: hits.isPressed(key) });
       led(ctx, bx + 8, by + 11 + off, 2.4, isOn(sel), label === 'SLIDE' ? C.ledGreen : C.ledOrange);
       text(ctx, label, bx + 28, by + 11.5 + off, { size: 6.5, weight: 800, color: C.inkLight });
-      hits.rect(ctx, bx, by, 48, 22, click(() => (touch(), apply(sel)), key));
+      hits.rect(ctx, bx, by, 48, 22, click(() => apply(sel), key));
     }
 
     const labelOpts = { size: 5.5, align: 'left', color: C.inkMuted, spacing: 0.4 };
@@ -266,10 +274,7 @@ export class Bassline {
     const { row: ROW, noteTop: NOTE_TOP, stepW: STEP_W, gridX: GRID_X } = this.L;
     const row = { x0: GRID_X, stepW: STEP_W };
     const width = 16 * STEP_W;
-    const select = (i) => {
-      dev.selectedStep = i;
-      this.state.ui.keysTarget = this.id;
-    };
+    const select = (i) => (dev.selectedStep = i);
     const selectAndHear = (i) => {
       if (dev.selectedStep === i) return;
       select(i);

@@ -53,6 +53,7 @@ export class Clock {
 
   // Stop twice to rewind to the start, like a hardware transport.
   stop() {
+    this.player.endPass(this.pos * TICKS_PER_STEP);
     if (this.t.playing) {
       this.t.playing = false;
       clearInterval(this.timer);
@@ -100,10 +101,12 @@ export class Clock {
     if (this.t.mode === mode) return;
     this.t.mode = mode;
     if (mode === 'song') this.player.chase(this.pos * TICKS_PER_STEP);
-    else this.t.rec = false;
+    else this.setRec(false);
   }
 
+  // A jump (seek, loop wrap) ends the recording pass; the next step starts a new one.
   jump(pos) {
+    this.player.endPass(this.pos * TICKS_PER_STEP);
     this.pos = pos;
     for (const id of DEVICE_IDS) this.devPos[id] = 0;
     if (this.songMode) this.player.chase(pos * TICKS_PER_STEP);
@@ -113,19 +116,22 @@ export class Clock {
     const { ctx } = this.engine;
     const { state } = this;
     const song = state.song;
+    if (this.recording) this.player.releaseIdle(performance.now(), this.recordTick());
     while (this.nextTime < ctx.currentTime + LOOKAHEAD && this.endAt === null) {
       let tick = this.pos * TICKS_PER_STEP;
-      // While recording the song grows with the take instead of ending.
-      if (this.recording) this.player.extend(tick);
-      else if (this.songMode && song.length) {
-        const loop = this.t.loop && song.loopEnd > song.loopStart;
-        if (loop && tick >= song.loopEnd) {
-          this.jump(song.loopStart / TICKS_PER_STEP);
-          tick = this.pos * TICKS_PER_STEP;
-        } else if (!loop && tick >= song.length) {
-          this.endAt = this.nextTime;
-          break;
-        }
+      // The A-B loop also runs while recording: each time round is a pass.
+      const loop = this.songMode && this.t.loop && song.loopEnd > song.loopStart;
+      if (loop && tick >= song.loopEnd) {
+        this.jump(song.loopStart / TICKS_PER_STEP);
+        tick = this.pos * TICKS_PER_STEP;
+      }
+      // Without a loop, the song grows with the take instead of ending.
+      if (this.recording) {
+        this.player.extend(tick);
+        if (!this.player.inPass) this.player.startPass(tick);
+      } else if (this.songMode && song.length && !loop && tick >= song.length) {
+        this.endAt = this.nextTime;
+        break;
       }
       if (this.songMode) for (const id of this.player.advance(tick)) this.devPos[id] = 0;
       for (const id of DEVICE_IDS) this.applyQueued(id, tick);
@@ -152,18 +158,38 @@ export class Clock {
   // Overdub user moves into the song while recording.
   onStateChange(type, d) {
     if (type === 'reset') {
+      this.player.clearPasses();
       this.pos = 0;
       this.t.bar = 1;
       if (this.songMode) this.player.chase(0);
       return;
     }
     if (type !== 'param' || d.source !== 'user' || !this.recording || UNRECORDED.test(d.key)) return;
-    this.player.record(d.key, d.value, this.heardTick());
+    // Moves before the scheduler has started this take's first pass.
+    if (!this.player.inPass) this.player.startPass(this.heardTick());
+    this.player.record(d.key, d.value, this.recordTick(), { mode: this.state.ui.recMode, prev: d.prev });
+  }
+
+  // Where a move lands: what's being heard, except just after a loop wrap,
+  // when the sound still trails at the end of the previous pass.
+  recordTick() {
+    const heard = this.heardTick();
+    return heard > this.pos * TICKS_PER_STEP ? this.player.passStart : heard;
+  }
+
+  // Takes back the last recording pass (or the one in progress) and puts every
+  // control where the restored song has it now.
+  undoPass() {
+    if (!this.player.undo()) return false;
+    const tick = this.t.playing ? this.pos * TICKS_PER_STEP : this.heardTick();
+    this.player.chase(tick);
+    return true;
   }
 
   // Arming REC switches to song mode. Devices without a pattern event yet get
   // their current pattern written at this bar so the take plays back as heard.
   setRec(on) {
+    if (!on) this.player.endPass(this.pos * TICKS_PER_STEP);
     this.t.rec = on;
     if (!on) return;
     this.setMode('song');

@@ -1,6 +1,6 @@
-// View preferences that outlive a song: stage, what PATTERNS shows, zoom.
+// Preferences that outlive a song: stage, what the focus stages show, record mode.
 const KEY = 're-rebirth.ui';
-const FIELDS = ['stage', 'show', 'zoom'];
+const FIELDS = ['stage', 'show', 'recMode'];
 
 export function loadPrefs(ui) {
   try {
@@ -11,9 +11,15 @@ export function loadPrefs(ui) {
   }
 }
 
+let saved = '';
+
+// Cheap to call on every change: writes only when something differs.
 export function savePrefs(ui) {
+  const json = JSON.stringify(Object.fromEntries(FIELDS.map((f) => [f, ui[f]])));
+  if (json === saved) return;
+  saved = json;
   try {
-    localStorage.setItem(KEY, JSON.stringify(Object.fromEntries(FIELDS.map((f) => [f, ui[f]]))));
+    localStorage.setItem(KEY, json);
   } catch {
     // Storage full or unavailable: preferences just don't persist.
   }

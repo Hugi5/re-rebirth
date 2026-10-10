@@ -4,13 +4,20 @@
 
 ### New
 - **PATTERNS stage** for writing parts in big, readable type. FOCUS on the transport opens it; RACK on its bar goes back.
-  - SHOW picks what fills the window: Bass Line 1, 2 or both, Drum 08, Drum 09 or both drum machines. Drum machines show every lane at once across the whole panel, with the selected instrument's knobs below. The bar on top keeps its size whatever you show. ZOOM makes everything bigger still (the window scrolls). The stage, SHOW and zoom are remembered.
-  - Type bass lines on the computer keyboard: A W S E D F T G Y H U J K play C to C and write the selected step, then the cursor moves on. Shift adds accent, Z / X set the octave, Tab slides the note you just typed into the next one, Backspace writes a rest, the arrow keys move the cursor. With both bass lines shown, the outlined one gets the notes; click a step to switch.
-  - Its bar has play, stop, record, tempo and position, and a FULL SCREEN button (F types a note here).
+  - SHOW picks the one instrument that fills the window: Bass Line 1 or 2, Drum 08 or Drum 09. Drum machines show every lane at once across the whole panel, with the selected instrument's knobs below. The stage and SHOW are remembered.
+  - Type bass lines on the computer keyboard: A W S E D F T G Y H U J K play C to C and write the selected step, then the cursor moves on. Shift adds accent, Z / X set the octave, Tab slides the note you just typed into the next one, Backspace writes a rest, the arrow keys move the cursor. The bass line's header spells this out.
+  - A slim bar on top has the stages, play, stop, record, tempo, position, SHOW and full screen (F types a note here). It keeps its size whatever you show.
+- **AUTOMATE stage** for recording knob moves over a loop, pass after pass:
+  - A timeline under the bar shows the whole song: drag A and B on it to set the loop (they snap to bars, to beats with Shift), drag anywhere else to draw a new loop, click to jump there. LOOP A–B switches it on and off.
+  - Arm REC and play: the loop keeps going round, and every knob you touch is recorded. No arming per knob.
+  - LATCH (the default) holds a knob's last value until the end of the pass; TOUCH lets it go a moment after you stop moving it. Either way the knob's old automation carries on after.
+  - UNDO PASS takes back the pass being recorded, or the one before; up to 32 passes.
+  - The timeline's lanes show the automation of the devices on screen, zoomed to the loop; knobs touched in this pass are marked and listed first.
 - **Share songs** from the library with the system share sheet (AirDrop to an iPad, Mail, Files...): the share icon on a row sends that song, SHARE in the toolbar sends every song listed (just the search results while searching). Browsers that can't share files download them instead.
 - Press F to switch full screen on and off. In Chrome and Edge, Escape then closes About, the library or automation first and leaves full screen only from the rack (hold Escape to leave straight away); other browsers leave full screen on Escape as usual.
 
 ### Changed
+- Recording knob moves works the same way in the rack: a knob you move keeps your value (LATCH) instead of being pulled back by its old automation, and returns to the old curve when you stop, seek, or the loop comes round.
 - Re-Rebirth now lives at [rb.varyform.info](https://rb.varyform.info).
 - The song library's list is easier to read: bigger song titles, file names and stars.
 

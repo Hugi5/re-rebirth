@@ -1,6 +1,6 @@
 // Computer-keyboard step entry for the bass lines in PATTERNS: a piano row
 // (A W S E D F T G Y H U J K = C..C) writes the selected step and moves on.
-import { shownDevices } from '../render/patterns-view.js';
+import { shownDevices } from '../render/focus-view.js';
 import { BASS_IDS } from '../state.js';
 
 const NOTE_KEYS = { KeyA: 0, KeyW: 1, KeyS: 2, KeyE: 3, KeyD: 4, KeyF: 5, KeyT: 6, KeyG: 7, KeyY: 8, KeyH: 9, KeyU: 10, KeyJ: 11, KeyK: 12 };
@@ -9,9 +9,8 @@ const NOTE_KEYS = { KeyA: 0, KeyW: 1, KeyS: 2, KeyE: 3, KeyD: 4, KeyF: 5, KeyT: 
 export function stepKey(e, state, engine) {
   const { ui } = state;
   if (ui.stage !== 'patterns' || ui.about || ui.library || ui.automation || e.metaKey || e.ctrlKey || e.altKey) return false;
-  const shown = shownDevices(state).filter((id) => BASS_IDS.includes(id));
-  if (!shown.length) return false;
-  const id = shown.includes(state.ui.keysTarget) ? state.ui.keysTarget : shown[0];
+  const [id] = shownDevices(state);
+  if (!BASS_IDS.includes(id)) return false;
   const dev = state.bass[id];
   const pattern = state.pattern(id);
   const len = pattern.length;

@@ -49,7 +49,7 @@ function laneLabel(track, key) {
 // Lanes are rebuilt only when the song changes (another song, or recording).
 let cache = { song: null, stamp: '', groups: [] };
 
-function laneGroups(song) {
+export function laneGroups(song) {
   const stamp = `${song.length}:${TRACK_ORDER.map((id) => song.tracks[id].length).join(',')}`;
   if (cache.song === song && cache.stamp === stamp) return cache.groups;
   const groups = [];
@@ -76,7 +76,7 @@ const songEnd = (song) => Math.max(song.length, TICKS_PER_BAR);
 const maxSpan = (song) => Math.max(songEnd(song), MIN_SPAN * 4);
 
 // Index of the last event at or before `tick`, or -1.
-function lastAt(events, tick) {
+export function lastAt(events, tick) {
   let lo = 0;
   let hi = events.length - 1;
   let found = -1;
@@ -92,7 +92,7 @@ function lastAt(events, tick) {
   return found;
 }
 
-function valueText(lane, value) {
+export function valueText(lane, value) {
   if (value === undefined) return '';
   if (lane.kind === 'pattern') return `${BANKS[Math.floor(value / 8)]}${(value % 8) + 1}`;
   if (lane.kind === 'switch') return value >= 0.5 ? 'ON' : 'OFF';
@@ -216,7 +216,7 @@ function drawToolbar(ctx, W, state, view, groups, song) {
 }
 
 // Bar numbering step so labels stay at least ~30 units apart.
-function rulerStep(pxPerBar) {
+export function rulerStep(pxPerBar) {
   for (const step of [1, 2, 4, 8, 16, 32, 64, 128, 256]) if (step * pxPerBar >= 30) return step;
   return 512;
 }
@@ -293,7 +293,7 @@ function drawLane(ctx, lane, color, y, { gx, gw, X, view, song, playTick, barSte
 // Knob moves hold until the next event: a stepped line with a soft fill.
 // Zoomed out, many moves share a pixel column; those collapse into one
 // vertical stroke over their range.
-function drawLevel(ctx, events, color, X, top, h, { from, to, end }) {
+export function drawLevel(ctx, events, color, X, top, h, { from, to, end }) {
   const Y = (v) => top + h - v * (h - 2) - 1;
   const path = new Path2D();
   let x0 = null;
@@ -345,7 +345,7 @@ function drawLevel(ctx, events, color, X, top, h, { from, to, end }) {
 }
 
 // Switches as lit blocks; pattern changes as labelled blocks.
-function drawBlocks(ctx, lane, color, X, top, h, { from, to, end }) {
+export function drawBlocks(ctx, lane, color, X, top, h, { from, to, end }) {
   const { events } = lane;
   for (let k = from; k < events.length && events[k].tick <= to; k++) {
     const e = events[k];
