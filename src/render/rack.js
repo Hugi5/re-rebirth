@@ -1,6 +1,3 @@
-import { drawAbout } from './about.js';
-import { drawAutomation } from './automation.js';
-import { drawLibrary } from './library.js';
 import { Bassline } from './devices/bassline.js';
 import { CHANNELS } from '../channels.js';
 import { ChannelStrip, STRIP_W } from './devices/channel-strip.js';
@@ -9,6 +6,7 @@ import { EffectsColumn } from './devices/effects.js';
 import { Transport } from './devices/transport.js';
 import { hgrad, line, rrect } from './primitives.js';
 import { C } from './theme.js';
+import { drawWindows } from './windows.js';
 
 const RAIL_W = 14;
 const MARGIN = 4;
@@ -30,10 +28,14 @@ export const RACK_H = MARGIN * 2 + TRANSPORT_H + GAP + ROWS_H + GAP * 3;
 export const MAX_STRETCH = { w: 1.6, h: 1.4 };
 
 export class Rack {
+  static key = () => 'rack';
+  static size = () => ({ min: { w: RACK_W, h: RACK_H }, stretch: MAX_STRETCH });
+
   // app: { clock, engine, files }
   constructor(state, app, width = RACK_W, height = RACK_H) {
     this.state = state;
     this.app = app;
+    this.key = Rack.key();
     this.devices = [];
     this.width = Math.max(RACK_W, width);
     this.height = Math.max(RACK_H, height);
@@ -86,10 +88,7 @@ export class Rack {
       d.draw(ctx);
       ctx.restore();
     }
-    // Windows are drawn last so their hit regions take every click while open.
-    if (this.state.ui.automation) drawAutomation(ctx, this.width, this.height, this.state, this.app);
-    if (this.state.ui.library) drawLibrary(ctx, this.width, this.height, this.state, this.app);
-    if (this.state.ui.about) drawAbout(ctx, this.width, this.height, this.state, this.app);
+    drawWindows(ctx, this.width, this.height, this.state, this.app);
   }
 
   drawRail(ctx, x) {

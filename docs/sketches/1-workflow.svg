@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="640" fill="#141518"/>
+  <text x="40" y="58" font-size="34" font-weight="800" fill="#f2f2f2">Workflow: four stages, one rack</text>
+  <text x="40" y="96" font-size="20" fill="#9a9ca3">A stage switch on the transport bar. Each stage shows only what it needs, at a size you can read.</text>
+
+  <!-- stage switch -->
+  <g font-size="22" font-weight="800" text-anchor="middle">
+    <rect x="40" y="130" width="250" height="64" rx="8" fill="#ff8a1a"/>
+    <text x="165" y="171" fill="#1a1a1a">1 · PATTERNS</text>
+    <rect x="320" y="130" width="250" height="64" rx="8" fill="#2c2f35" stroke="#555" stroke-width="2"/>
+    <text x="445" y="171" fill="#f2f2f2">2 · ARRANGE</text>
+    <rect x="600" y="130" width="250" height="64" rx="8" fill="#2c2f35" stroke="#555" stroke-width="2"/>
+    <text x="725" y="171" fill="#f2f2f2">3 · AUTOMATE</text>
+    <rect x="880" y="130" width="280" height="64" rx="8" fill="#2c2f35" stroke="#555" stroke-width="2"/>
+    <text x="1020" y="171" fill="#f2f2f2">4 · MIX &amp; MASTER</text>
+  </g>
+  <g stroke="#666" stroke-width="3" fill="#666">
+    <line x1="292" y1="162" x2="314" y2="162"/><path d="M318 162 l-10 -7 v14 z"/>
+    <line x1="572" y1="162" x2="594" y2="162"/><path d="M598 162 l-10 -7 v14 z"/>
+    <line x1="852" y1="162" x2="874" y2="162"/><path d="M878 162 l-10 -7 v14 z"/>
+  </g>
+
+  <!-- what each stage shows -->
+  <g font-size="19" fill="#d6d7db">
+    <rect x="40" y="220" width="250" height="300" rx="8" fill="#1f2125" stroke="#ff8a1a" stroke-width="2"/>
+    <text x="58" y="258" font-weight="800" fill="#ff8a1a">Write the parts</text>
+    <text x="58" y="296">Bass lines and drum</text>
+    <text x="58" y="320">grids, big. Pick which:</text>
+    <text x="58" y="352">• both 303s</text>
+    <text x="58" y="380">• 808, 909 or both</text>
+    <text x="58" y="408">• one instrument</text>
+    <text x="58" y="446">Effects can be heard</text>
+    <text x="58" y="470">but aren't written</text>
+    <text x="58" y="494">into the song.</text>
+
+    <rect x="320" y="220" width="250" height="300" rx="8" fill="#1f2125" stroke="#555" stroke-width="2"/>
+    <text x="338" y="258" font-weight="800" fill="#f2f2f2">Chain the patterns</text>
+    <text x="338" y="296">One row per machine,</text>
+    <text x="338" y="320">bars across: which</text>
+    <text x="338" y="344">pattern plays when,</text>
+    <text x="338" y="368">mutes, tempo.</text>
+    <text x="338" y="406">Drag patterns in,</text>
+    <text x="338" y="430">copy whole sections.</text>
+    <text x="338" y="468">(Today: recording</text>
+    <text x="338" y="492">pattern switches.)</text>
+
+    <rect x="600" y="220" width="250" height="300" rx="8" fill="#1f2125" stroke="#555" stroke-width="2"/>
+    <text x="618" y="258" font-weight="800" fill="#f2f2f2">Ride the knobs</text>
+    <text x="618" y="296">A–B loop over a few</text>
+    <text x="618" y="320">bars; every knob you</text>
+    <text x="618" y="344">touch is recorded</text>
+    <text x="618" y="368">(LATCH or TOUCH),</text>
+    <text x="618" y="392">MIDI knobs too.</text>
+    <text x="618" y="430">Each pass is a take:</text>
+    <text x="618" y="454">undo the last one.</text>
+
+    <rect x="880" y="220" width="280" height="300" rx="8" fill="#1f2125" stroke="#555" stroke-width="2"/>
+    <text x="898" y="258" font-weight="800" fill="#f2f2f2">Balance and finish</text>
+    <text x="898" y="296">Channel strips, effects,</text>
+    <text x="898" y="320">master compressor and</text>
+    <text x="898" y="344">meters, large.</text>
+    <text x="898" y="382">Settings here are the</text>
+    <text x="898" y="406">song's starting values,</text>
+    <text x="898" y="430">not automation.</text>
+    <text x="898" y="468">EXPORT WAV renders</text>
+    <text x="898" y="492">the song offline.</text>
+  </g>
+
+  <text x="40" y="572" font-size="20" fill="#9a9ca3">Stages are views, not locks: the song is one thing, you can jump back to PATTERNS at any time.</text>
+  <text x="40" y="604" font-size="20" fill="#9a9ca3">The full rack stays one click away (RACK), exactly as now.</text>
+</svg>

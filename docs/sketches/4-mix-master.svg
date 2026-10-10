@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="720" fill="#141518"/>
+  <text x="40" y="54" font-size="32" font-weight="800" fill="#f2f2f2">4 · MIX &amp; MASTER: the end of the chain, large</text>
+
+  <!-- four channel strips -->
+  <g font-size="20" font-weight="800" text-anchor="middle">
+    <rect x="40" y="80" width="170" height="420" rx="8" fill="#1f2125" stroke="#ff8a1a" stroke-width="2"/><text x="125" y="114" fill="#ff8a1a">BASS 1</text>
+    <rect x="225" y="80" width="170" height="420" rx="8" fill="#1f2125" stroke="#ff8a1a" stroke-width="2"/><text x="310" y="114" fill="#ff8a1a">BASS 2</text>
+    <rect x="410" y="80" width="170" height="420" rx="8" fill="#1f2125" stroke="#e0453a" stroke-width="2"/><text x="495" y="114" fill="#e0453a">808</text>
+    <rect x="595" y="80" width="170" height="420" rx="8" fill="#1f2125" stroke="#ffd21a" stroke-width="2"/><text x="680" y="114" fill="#ffd21a">909</text>
+  </g>
+  <g font-size="17" text-anchor="middle" fill="#d6d7db">
+    <g>
+      <circle cx="90" cy="168" r="30" fill="#2c2f35"/><text x="90" y="218">PAN</text>
+      <circle cx="160" cy="168" r="30" fill="#2c2f35"/><text x="160" y="218">DELAY</text>
+      <rect x="62" y="236" width="56" height="30" rx="5" fill="#2c2f35"/><text x="90" y="257">DIST</text>
+      <rect x="132" y="236" width="56" height="30" rx="5" fill="#2c2f35"/><text x="160" y="257">COMP</text>
+      <rect x="110" y="286" width="30" height="190" rx="5" fill="#2c2f35"/><rect x="98" y="360" width="54" height="26" rx="4" fill="#9a9ca3"/>
+      <rect x="160" y="286" width="12" height="190" fill="#5dff4a" fill-opacity="0.5"/><rect x="176" y="286" width="12" height="190" fill="#5dff4a" fill-opacity="0.5"/>
+    </g>
+  </g>
+  <text x="310" y="300" font-size="18" text-anchor="middle" fill="#9a9ca3">same</text>
+  <text x="495" y="300" font-size="18" text-anchor="middle" fill="#9a9ca3">same</text>
+  <text x="680" y="300" font-size="18" text-anchor="middle" fill="#9a9ca3">same</text>
+
+  <!-- effects + master -->
+  <rect x="790" y="80" width="370" height="200" rx="8" fill="#1f2125" stroke="#5fe08a" stroke-width="2"/>
+  <text x="810" y="114" font-size="20" font-weight="800" fill="#5fe08a">EFFECTS</text>
+  <g font-size="18" fill="#d6d7db">
+    <text x="810" y="152">DELAY · DISTORTION · PCF</text>
+    <text x="810" y="180">COMPRESSOR with its curve screen</text>
+    <text x="810" y="216" fill="#9a9ca3">all knobs at least 2x today's size</text>
+  </g>
+  <rect x="790" y="296" width="370" height="204" rx="8" fill="#1f2125" stroke="#f2f2f2" stroke-width="2"/>
+  <text x="810" y="330" font-size="20" font-weight="800" fill="#f2f2f2">MASTER</text>
+  <g font-size="18" fill="#d6d7db">
+    <text x="810" y="366">fader · VU needles / spectrum</text>
+    <text x="810" y="394">loudness readout (LUFS, peak)</text>
+    <rect x="810" y="418" width="160" height="56" rx="8" fill="#ff8a1a"/><text x="890" y="453" font-weight="800" text-anchor="middle" fill="#1a1a1a">EXPORT WAV</text>
+    <rect x="985" y="418" width="160" height="56" rx="8" fill="#2c2f35"/><text x="1065" y="453" font-weight="800" text-anchor="middle">LOOP A–B</text>
+  </g>
+
+  <!-- explanation -->
+  <g font-size="19" fill="#d6d7db">
+    <text x="40" y="548" font-weight="800" fill="#f2f2f2">What "mastering" means in a ReBirth</text>
+    <text x="40" y="580">• ReBirth has no mastering stage: the master compressor, the master fader and the effects are the whole chain.</text>
+    <text x="40" y="608">• Here, MIX sets each knob's starting value for the song. Automation (stage 3) moves it from there; a knob that's</text>
+    <text x="40" y="636">   automated shows its lane colour, so you know your static change will be overridden.</text>
+    <text x="40" y="664">• Loudness readout + EXPORT WAV (the offline renderer we already have, in the app) finish the song.</text>
+    <text x="40" y="692">• LOOP A–B works here too: balance the loudest section on repeat without recording anything.</text>
+  </g>
+</svg>

@@ -21,6 +21,7 @@ Everything is drawn on a canvas and every sound is synthesized live with the Web
 - **Song mode:** play a song's arrangement and automation, loop a range, or arm REC and record pattern changes and knob moves.
 - **Automation window:** every recorded control of the song as a graph over time. Pan, zoom, and click the ruler to jump.
 - **Songs:** opens ReBirth 2.0 / 2.0.1 `.rbs` files and saves its own `.json`. Work is autosaved in the browser.
+- **PATTERNS stage** (FOCUS on the transport): just the instruments you're writing, as big as the window allows. Show one or both bass lines, Drum 08, Drum 09 or both drum machines; ZOOM goes bigger still. Type bass lines on the computer keyboard.
 - The rack scales to fill the window. It works with a mouse, a trackpad or touch, including iPad and iPhone.
 
 ### Keys and gestures
@@ -33,6 +34,9 @@ Everything is drawn on a canvas and every sound is synthesized live with the Web
 | Hold REW / FF | Seek, faster the longer you hold |
 | Shift-click a Drum 09 step | Cycle on → accent → flam → off |
 | <kbd>Esc</kbd> | Close a window |
+| <kbd>F</kbd> | Full screen on/off (outside PATTERNS step entry) |
+| PATTERNS, bass shown: <kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> … <kbd>K</kbd> | Write a note (C to C) on the selected step and move on; <kbd>Shift</kbd> adds accent |
+| PATTERNS: <kbd>Z</kbd> / <kbd>X</kbd>, <kbd>Tab</kbd>, <kbd>⌫</kbd>, <kbd>←</kbd> <kbd>→</kbd> | Octave down/up, slide into the next note, rest, move the cursor |
 
 ## Song compatibility
 

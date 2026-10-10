@@ -44,6 +44,27 @@ export function click(fn, key) {
 
 export const toggle = (state, param, key) => click(() => state.toggle(param), key);
 
+// Drag a tempo readout: 2 px per BPM, shift for 0.1 steps; scroll nudges.
+export function tempoDrag(state) {
+  const nudge = (amount) => state.setTempo(state.transport.tempo + amount);
+  return {
+    cursor: 'ns-resize',
+    down: () => {
+      let acc = 0;
+      return {
+        move: (ev) => {
+          acc -= ev.ddy / (ev.fine ? 20 : 2);
+          const whole = Math.trunc(acc);
+          if (!whole) return;
+          acc -= whole;
+          nudge(whole * (ev.fine ? 0.1 : 1));
+        },
+      };
+    },
+    wheel: (ev) => nudge(-Math.sign(ev.delta) * (ev.fine ? 0.1 : 1)),
+  };
+}
+
 // Acts when the pointer is released instead of pressed. Needed for anything that
 // opens system UI (file picker, download, new tab): on touch screens browsers only
 // treat the release as a user gesture (pointerdown doesn't count on iOS).

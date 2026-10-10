@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="800" fill="#141518"/>
+  <text x="40" y="54" font-size="32" font-weight="800" fill="#f2f2f2">5 · MIDI: Arturia MiniLab 3</text>
+
+  <!-- controller body -->
+  <rect x="40" y="80" width="1120" height="330" rx="14" fill="#23252a"/>
+  <!-- pads -->
+  <g>
+    <rect x="70" y="110" width="70" height="70" rx="8" fill="#5fe08a"/>
+    <rect x="150" y="110" width="70" height="70" rx="8" fill="#5fe08a"/>
+    <rect x="230" y="110" width="70" height="70" rx="8" fill="#5fe08a"/>
+    <rect x="310" y="110" width="70" height="70" rx="8" fill="#5fe08a"/>
+    <rect x="70" y="190" width="70" height="70" rx="8" fill="#5fe08a"/>
+    <rect x="150" y="190" width="70" height="70" rx="8" fill="#5fe08a"/>
+    <rect x="230" y="190" width="70" height="70" rx="8" fill="#5fe08a"/>
+    <rect x="310" y="190" width="70" height="70" rx="8" fill="#5fe08a"/>
+  </g>
+  <text x="225" y="292" font-size="20" font-weight="800" text-anchor="middle" fill="#5fe08a">PADS → drums</text>
+  <!-- knobs -->
+  <g fill="#2c2f35" stroke="#ff8a1a" stroke-width="4">
+    <circle cx="450" cy="140" r="28"/><circle cx="530" cy="140" r="28"/><circle cx="610" cy="140" r="28"/><circle cx="690" cy="140" r="28"/>
+    <circle cx="450" cy="225" r="28"/><circle cx="530" cy="225" r="28"/><circle cx="610" cy="225" r="28"/><circle cx="690" cy="225" r="28"/>
+  </g>
+  <g font-size="15" text-anchor="middle" fill="#d6d7db">
+    <text x="450" y="186">CUTOFF</text><text x="530" y="186">RESO</text><text x="610" y="186">ENV</text><text x="690" y="186">DECAY</text>
+    <text x="450" y="271">CUTOFF</text><text x="530" y="271">RESO</text><text x="610" y="271">ENV</text><text x="690" y="271">DECAY</text>
+  </g>
+  <text x="400" y="145" font-size="16" font-weight="800" text-anchor="end" fill="#ff8a1a">303-1</text>
+  <text x="400" y="230" font-size="16" font-weight="800" text-anchor="end" fill="#ff8a1a">303-2</text>
+  <text x="570" y="300" font-size="20" font-weight="800" text-anchor="middle" fill="#ff8a1a">KNOBS → 303 (or MIDI learn)</text>
+  <!-- faders -->
+  <g fill="#2c2f35">
+    <rect x="780" y="110" width="20" height="170" rx="6"/><rect x="850" y="110" width="20" height="170" rx="6"/>
+    <rect x="920" y="110" width="20" height="170" rx="6"/><rect x="990" y="110" width="20" height="170" rx="6"/>
+  </g>
+  <g fill="#7ab8ff">
+    <rect x="770" y="170" width="40" height="22" rx="4"/><rect x="840" y="150" width="40" height="22" rx="4"/>
+    <rect x="910" y="190" width="40" height="22" rx="4"/><rect x="980" y="160" width="40" height="22" rx="4"/>
+  </g>
+  <g font-size="15" text-anchor="middle" fill="#d6d7db">
+    <text x="790" y="300">303-1</text><text x="860" y="300">303-2</text><text x="930" y="300">808</text><text x="1000" y="300">909</text>
+  </g>
+  <text x="1090" y="200" font-size="20" font-weight="800" text-anchor="middle" fill="#7ab8ff">FADERS</text>
+  <text x="1090" y="226" font-size="16" text-anchor="middle" fill="#7ab8ff">→ levels</text>
+  <!-- keys -->
+  <g fill="#e8e8e8" stroke="#141518" stroke-width="2">
+    <rect x="70" y="320" width="45" height="80"/><rect x="115" y="320" width="45" height="80"/><rect x="160" y="320" width="45" height="80"/>
+    <rect x="205" y="320" width="45" height="80"/><rect x="250" y="320" width="45" height="80"/><rect x="295" y="320" width="45" height="80"/>
+    <rect x="340" y="320" width="45" height="80"/><rect x="385" y="320" width="45" height="80"/><rect x="430" y="320" width="45" height="80"/>
+    <rect x="475" y="320" width="45" height="80"/><rect x="520" y="320" width="45" height="80"/><rect x="565" y="320" width="45" height="80"/>
+    <rect x="610" y="320" width="45" height="80"/><rect x="655" y="320" width="45" height="80"/>
+  </g>
+  <text x="900" y="370" font-size="20" font-weight="800" text-anchor="middle" fill="#f2f2f2">KEYS → 303 notes</text>
+
+  <!-- explanation -->
+  <g font-size="19" fill="#d6d7db">
+    <text x="40" y="460" font-weight="800" fill="#f2f2f2">Default mapping (works out of the box)</text>
+    <text x="40" y="494"><tspan font-weight="800" fill="#ff8a1a">Knobs</tspan> – top row 303-1, bottom row 303-2: cutoff, reso, env mod, decay.</text>
+    <text x="40" y="524"><tspan font-weight="800" fill="#7ab8ff">Faders</tspan> – mixer channel levels.</text>
+    <text x="40" y="554"><tspan font-weight="800">Keys</tspan> – PATTERNS: step entry into the focused 303 (velocity &gt; 100 = accent,</text>
+    <text x="60" y="584">legato = slide). Otherwise: play the focused 303 live.</text>
+    <text x="40" y="614"><tspan font-weight="800" fill="#5fe08a">Pads</tspan> – 808 / 909 voices; hit hard = accent. In PATTERNS they write the current step.</text>
+
+    <text x="640" y="460" font-weight="800" fill="#f2f2f2">MIDI learn</text>
+    <text x="640" y="494">Click LEARN, click any knob on screen,</text>
+    <text x="640" y="524">turn a hardware control. Saved in the browser.</text>
+  </g>
+  <g font-size="19" fill="#9a9ca3">
+    <text x="40" y="676">• Move several hardware knobs at once: every one counts as touched and records in AUTOMATE.</text>
+    <text x="40" y="704">• Soft takeover: a knob only grabs the parameter once it passes the current value (no jumps).</text>
+    <text x="40" y="732">• Web MIDI works in desktop Chrome, Edge and Firefox. Safari and iPad have no Web MIDI.</text>
+    <text x="40" y="760">• Clock out/in (sync to other gear) can come later; not part of the first step.</text>
+  </g>
+</svg>

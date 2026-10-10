@@ -2,7 +2,8 @@ import './style.css';
 import { AudioEngine } from './audio/engine.js';
 import { loadDemo } from './demo.js';
 import { addedMessage, closeLibrary, openLibrary, SEARCH_PLACEHOLDER } from './render/library.js';
-import { MAX_STRETCH, Rack, RACK_H, RACK_W } from './render/rack.js';
+import { Rack } from './render/rack.js';
+import { layoutKey, viewClass, viewKey, zoomOf } from './render/views.js';
 import { Clock } from './sequencer/clock.js';
 import { Files } from './song/files.js';
 import { collectDropped, Library } from './song/library.js';
@@ -10,6 +11,8 @@ import { State } from './state.js';
 import { hits } from './ui/hits.js';
 import { canvasInput } from './ui/canvas-input.js';
 import { attachPointer } from './ui/pointer.js';
+import { loadPrefs, savePrefs } from './ui/prefs.js';
+import { stepKey } from './ui/step-keys.js';
 
 const canvas = document.getElementById('rack');
 const ctx = canvas.getContext('2d');
@@ -37,11 +40,14 @@ const files = new Files(state, {
     if (file instanceof Blob) remember(file);
   },
 });
-const app = { clock, engine, files, library, notify };
-// Controls register their parameter defaults here, so build the rack before loading.
-let rack = new Rack(state, app);
+const app = { clock, engine, files, library, notify, toggleFullscreen };
+// Controls register their parameter defaults here, so build the whole rack
+// before loading, whatever stage is shown.
+let view = new Rack(state, app);
+let layout = null;
 
 if (!files.restore()) loadDemo(state);
+loadPrefs(state.ui);
 
 let frame = 0;
 
@@ -66,12 +72,14 @@ function notify(message) {
 
 function render() {
   frame = 0;
-  // Draw in rack design units; the transform handles window scale + HiDPI.
-  ctx.setTransform(canvas.width / rack.width, 0, 0, canvas.height / rack.height, 0, 0);
+  // A stage, SHOW or zoom change: lay out again (resize renders).
+  if (layoutKey(state) !== layout) return resize();
+  // Draw in design units; the transform handles window scale + HiDPI.
+  ctx.setTransform(canvas.width / view.width, 0, 0, canvas.height / view.height, 0, 0);
   hits.clear();
-  rack.draw(ctx);
+  view.draw(ctx);
   const lib = state.ui.library;
-  search.place(lib?.search ?? null, rack.width, lib?.query ?? '');
+  search.place(lib?.search ?? null, view.width, lib?.query ?? '');
 }
 
 // Pushes knob changes to the audio graph and pulls playhead/meter updates back.
@@ -84,17 +92,24 @@ function animate() {
 }
 
 // Fill the window: one uniform scale (fit the tighter dimension, never below
-// 1:1), and the rack is rebuilt wider or taller to use the rest, up to
-// MAX_STRETCH. Smaller windows scroll, like the original rack did.
+// 1:1, times the stage's zoom), and the view is rebuilt wider or taller to use
+// the rest, up to its stretch limit. Smaller windows (or zoom past the fit)
+// scroll, like the original rack did.
 function resize() {
   const W = window.innerWidth;
   const H = window.innerHeight;
-  const scale = Math.max(1, Math.min(W / RACK_W, H / RACK_H));
-  const width = Math.round(Math.min(RACK_W * MAX_STRETCH.w, Math.max(RACK_W, W / scale)));
-  const height = Math.round(Math.min(RACK_H * MAX_STRETCH.h, Math.max(RACK_H, H / scale)));
-  if (width !== rack.width || height !== rack.height) rack = new Rack(state, app, width, height);
-  const cssW = Math.floor(rack.width * scale);
-  const cssH = Math.floor(rack.height * scale);
+  const View = viewClass(state);
+  const { min, stretch } = View.size(state);
+  const scale = Math.max(1, Math.min(W / min.w, H / min.h)) * zoomOf(state);
+  const width = Math.round(Math.min(min.w * stretch.w, Math.max(min.w, W / scale)));
+  const height = Math.round(Math.min(min.h * stretch.h, Math.max(min.h, H / scale)));
+  if (width !== view.width || height !== view.height || viewKey(state) !== view.key) view = new View(state, app, width, height);
+  if (layoutKey(state) !== layout) {
+    layout = layoutKey(state);
+    savePrefs(state.ui);
+  }
+  const cssW = Math.floor(view.width * scale);
+  const cssH = Math.floor(view.height * scale);
   const dpr = window.devicePixelRatio || 1;
   canvas.style.width = `${cssW}px`;
   canvas.style.height = `${cssH}px`;
@@ -136,6 +151,12 @@ window.addEventListener('keydown', (e) => {
   // Only reaches us in full screen when Escape is locked (see toggleFullscreen).
   if (e.code === 'Escape' && isFullscreen()) {
     toggleFullscreen();
+    return;
+  }
+  if (stepKey(e, state, engine)) {
+    e.preventDefault();
+    requestRender();
+    files.autosave();
     return;
   }
   if (e.code === 'KeyF' && !e.repeat && !e.metaKey && !e.ctrlKey && !e.altKey) {

@@ -26,7 +26,20 @@ export class State {
     // App chrome, not part of a song. automation: the open view's scroll/zoom, or
     // null when closed; grid: drum machines showing all lanes instead of knobs;
     // masterView: the master module's meters, 'vu' needles or 'spectrum'.
-    this.ui = { about: false, automation: null, library: null, grid: { r808: false, r909: false }, masterView: 'vu' };
+    // stage: the view ('rack' or a focus stage); show: which devices PATTERNS
+    // shows; zoom: per stage; keysTarget/octave: computer-keyboard step entry.
+    this.ui = {
+      about: false,
+      automation: null,
+      library: null,
+      grid: { r808: false, r909: false },
+      masterView: 'vu',
+      stage: 'rack',
+      show: 'bass1',
+      zoom: {},
+      keysTarget: 'bass1',
+      octave: 0,
+    };
     this.clearSong();
   }
 

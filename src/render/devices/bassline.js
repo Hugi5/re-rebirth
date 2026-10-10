@@ -17,20 +17,24 @@ const KNOBS = [
 ];
 
 const HEADER_H = 18;
-const GRID_X = 338;
 const SELECTOR_W = 236;
 const EDIT_BUTTONS = [
-  ['DOWN', 198, 0, (s) => s.octave < 0, (s) => (s.octave = s.octave < 0 ? 0 : -1)],
-  ['UP', 252, 0, (s) => s.octave > 0, (s) => (s.octave = s.octave > 0 ? 0 : 1)],
-  ['ACCENT', 198, 1, (s) => s.accent, (s) => (s.accent = !s.accent)],
-  ['SLIDE', 252, 1, (s) => s.slide, (s) => (s.slide = !s.slide)],
+  ['DOWN', 0, 0, (s) => s.octave < 0, (s) => (s.octave = s.octave < 0 ? 0 : -1)],
+  ['UP', 54, 0, (s) => s.octave > 0, (s) => (s.octave = s.octave > 0 ? 0 : 1)],
+  ['ACCENT', 0, 1, (s) => s.accent, (s) => (s.accent = !s.accent)],
+  ['SLIDE', 54, 1, (s) => s.slide, (s) => (s.slide = !s.slide)],
 ];
+// Narrower than the rack panel, the keyboard, edit buttons and pattern selector
+// move below a full-width step grid (focus views).
+export const BASS_MIN = { w: 772, h: 156 };
+export const BASS_STACKED_MIN = { w: 580, h: 222 };
 
 // Positions for a panel of size w x h (minimum 772 x 156). Extra width spreads the
 // knobs and steps, with the pattern selector anchored right; extra height is shared
 // by the knob section (content centred) and the sequencer (rows spread apart).
 // The knob section (18..80) fits the pattern selector with equal room above and below.
 function layout(w, h) {
+  if (w < BASS_MIN.w) return stackedLayout(w, h);
   const extraH = Math.max(0, h - 156);
   const knobExtra = (extraH * 62) / 138;
   const seqY = 80 + knobExtra;
@@ -39,18 +43,58 @@ function layout(w, h) {
   const noteTop = at(4);
   const pad = at(54);
   const selectorX = w - 20 - SELECTOR_W;
+  const gridX = 338;
   return {
     knobY: 55.5 + knobExtra / 2,
     selectorY: 22 + knobExtra / 2,
     knobX: (i) => 102 + (i * (selectorX - 54 - 102)) / 6,
     selectorX,
     seqY,
-    stepW: (w - 18 - GRID_X) / 16,
+    gridX,
+    labelX: 309,
+    stepW: (w - 18 - gridX) / 16,
+    cellW: 22,
     noteTop,
     row: { note: noteTop + 7, oct: at(26), acc: at(36), slide: at(46), pad },
     gridBottom: pad + 17,
     keyboard: [18, at(8), 168, 54 * sv],
+    editX: 198,
     editRows: [at(9), at(38)],
+  };
+}
+
+// Header, knob row, step grid across the whole panel, then keyboard + edit
+// buttons + pattern selector. Extra height goes mostly to the step grid.
+function stackedLayout(w, h) {
+  const extra = Math.max(0, h - BASS_STACKED_MIN.h);
+  const knobExtra = extra * 0.25;
+  const seqY = 80 + knobExtra;
+  const sv = (76 + extra * 0.5) / 76;
+  const at = (offset) => seqY + offset * sv;
+  const noteTop = at(4);
+  const pad = at(54);
+  const bottomY = seqY + 76 * sv;
+  const bv = (h - bottomY) / (BASS_STACKED_MIN.h - 156);
+  const below = (offset) => bottomY + offset * bv;
+  const gridX = 50;
+  const stepW = (w - 18 - gridX) / 16;
+  const selectorX = w - 20 - SELECTOR_W;
+  return {
+    knobY: 55.5 + knobExtra / 2,
+    knobX: (i) => 102 + (i * (w - 40 - 102)) / 6,
+    selectorX,
+    selectorY: below(6),
+    seqY,
+    gridX,
+    labelX: 18,
+    stepW,
+    cellW: Math.min(stepW - 4, 34),
+    noteTop,
+    row: { note: noteTop + 7, oct: at(26), acc: at(36), slide: at(46), pad },
+    gridBottom: pad + 17,
+    keyboard: [18, below(6), 168, 54 * bv],
+    editX: 198,
+    editRows: [below(7), below(36)],
   };
 }
 const NEXT_OCTAVE = { 0: 1, 1: -1, '-1': 0 };
@@ -142,32 +186,35 @@ export class Bassline {
     const steps = pattern.steps;
     const sel = steps[dev.selectedStep];
     const audition = () => this.app.engine.auditionBass(id, sel);
-    const { row: ROW, noteTop: NOTE_TOP, gridBottom: GRID_BOTTOM, keyboard: KEYBOARD, stepW: STEP_W } = this.L;
+    const { row: ROW, noteTop: NOTE_TOP, gridBottom: GRID_BOTTOM, keyboard: KEYBOARD, stepW: STEP_W, gridX: GRID_X, labelX, cellW } = this.L;
+    const touch = () => (state.ui.keysTarget = id);
 
     // Keys enter a note on the selected step; black keys register last so they win.
     miniKeyboard(ctx, ...KEYBOARD, { active: sel.gate ? sel.note : -1 });
     for (const k of keyboardKeys(...KEYBOARD)) {
       hits.rect(ctx, k.x, k.y, k.w, k.h, click(() => {
+        touch();
         Object.assign(sel, { note: k.note, gate: true, tie: false });
         audition();
       }));
     }
 
-    for (const [label, bx, editRow, isOn, apply] of EDIT_BUTTONS) {
+    for (const [label, dx, editRow, isOn, apply] of EDIT_BUTTONS) {
+      const bx = this.L.editX + dx;
       const by = this.L.editRows[editRow];
       const key = `${id}.edit.${label}`;
       const off = button(ctx, bx, by, 48, 22, { face: C.bassPad, pressed: hits.isPressed(key) });
       led(ctx, bx + 8, by + 11 + off, 2.4, isOn(sel), label === 'SLIDE' ? C.ledGreen : C.ledOrange);
       text(ctx, label, bx + 28, by + 11.5 + off, { size: 6.5, weight: 800, color: C.inkLight });
-      hits.rect(ctx, bx, by, 48, 22, click(() => apply(sel), key));
+      hits.rect(ctx, bx, by, 48, 22, click(() => (touch(), apply(sel)), key));
     }
 
     const labelOpts = { size: 5.5, align: 'left', color: C.inkMuted, spacing: 0.4 };
-    text(ctx, 'NOTE', 309, ROW.note, labelOpts);
-    text(ctx, 'OCT', 309, ROW.oct, labelOpts);
-    text(ctx, 'ACC', 309, ROW.acc, labelOpts);
-    text(ctx, 'SLIDE', 309, ROW.slide, labelOpts);
-    text(ctx, 'STEP', 309, ROW.pad + 7, labelOpts);
+    text(ctx, 'NOTE', labelX, ROW.note, labelOpts);
+    text(ctx, 'OCT', labelX, ROW.oct, labelOpts);
+    text(ctx, 'ACC', labelX, ROW.acc, labelOpts);
+    text(ctx, 'SLIDE', labelX, ROW.slide, labelOpts);
+    text(ctx, 'STEP', labelX, ROW.pad + 7, labelOpts);
 
     ctx.strokeStyle = 'rgba(255,255,255,0.1)';
     ctx.lineWidth = 1;
@@ -183,7 +230,7 @@ export class Bassline {
       // Steps past the pattern length don't play: dim them.
       if (i >= pattern.length) ctx.globalAlpha = 0.3;
       if (i === dev.selectedStep) {
-        rrect(ctx, cx - 12.5, NOTE_TOP - 2.5, 25, GRID_BOTTOM - NOTE_TOP + 4.5, 2.5);
+        rrect(ctx, cx - cellW / 2 - 1.5, NOTE_TOP - 2.5, cellW + 3, GRID_BOTTOM - NOTE_TOP + 4.5, 2.5);
         ctx.fillStyle = 'rgba(255,106,26,0.12)';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,106,26,0.7)';
@@ -191,7 +238,7 @@ export class Bassline {
         ctx.stroke();
       }
 
-      rrect(ctx, cx - 11, NOTE_TOP, 22, 14, 1.5);
+      rrect(ctx, cx - cellW / 2, NOTE_TOP, cellW, 14, 1.5);
       ctx.fillStyle = C.bassCell;
       ctx.fill();
       const noteColor = !s.gate ? C.bassNoteOff : s.accent ? C.bassNoteAccent : C.bassNote;
@@ -207,7 +254,7 @@ export class Bassline {
       led(ctx, cx, ROW.slide, 2.5, s.slide, C.ledGreen);
 
       const playing = playhead === i;
-      const off = button(ctx, cx - 11, ROW.pad, 22, 14, { face: playing ? C.bassPadOn : C.bassPad, pressed: playing });
+      const off = button(ctx, cx - cellW / 2, ROW.pad, cellW, 14, { face: playing ? C.bassPadOn : C.bassPad, pressed: playing });
       text(ctx, String(i + 1), cx, ROW.pad + 7.5 + off, { size: 6.5, weight: 800, color: playing ? C.bassInk : C.inkLight });
       ctx.globalAlpha = 1;
     });
@@ -217,10 +264,13 @@ export class Bassline {
 
   // Note row toggles note/rest, OCT cycles up/down/none, ACC/SLIDE paint, pads select.
   registerGrid(ctx, pattern, dev) {
-    const { row: ROW, noteTop: NOTE_TOP, stepW: STEP_W } = this.L;
+    const { row: ROW, noteTop: NOTE_TOP, stepW: STEP_W, gridX: GRID_X } = this.L;
     const row = { x0: GRID_X, stepW: STEP_W };
     const width = 16 * STEP_W;
-    const select = (i) => (dev.selectedStep = i);
+    const select = (i) => {
+      dev.selectedStep = i;
+      this.state.ui.keysTarget = this.id;
+    };
     const selectAndHear = (i) => {
       if (dev.selectedStep === i) return;
       select(i);

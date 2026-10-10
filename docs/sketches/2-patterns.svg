@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="760" fill="#141518"/>
+  <text x="40" y="54" font-size="32" font-weight="800" fill="#f2f2f2">1 · PATTERNS: focus on the parts you're writing</text>
+
+  <!-- top bar -->
+  <rect x="40" y="76" width="1120" height="64" rx="8" fill="#23252a"/>
+  <g font-size="20" font-weight="800" text-anchor="middle">
+    <text x="110" y="116" fill="#9a9ca3">SHOW:</text>
+    <rect x="160" y="88" width="150" height="40" rx="6" fill="#ff8a1a"/><text x="235" y="115" fill="#1a1a1a">BASS 1 + 2</text>
+    <rect x="320" y="88" width="110" height="40" rx="6" fill="#2c2f35"/><text x="375" y="115" fill="#d6d7db">808</text>
+    <rect x="440" y="88" width="110" height="40" rx="6" fill="#2c2f35"/><text x="495" y="115" fill="#d6d7db">909</text>
+    <rect x="560" y="88" width="160" height="40" rx="6" fill="#2c2f35"/><text x="640" y="115" fill="#d6d7db">808 + 909</text>
+    <rect x="760" y="88" width="190" height="40" rx="6" fill="#2c2f35" stroke="#5fe08a" stroke-width="2"/><text x="855" y="115" fill="#5fe08a">HEAR FX: DELAY</text>
+    <rect x="960" y="88" width="190" height="40" rx="6" fill="#2c2f35"/><text x="1055" y="115" fill="#d6d7db">ZOOM  −  ＋</text>
+  </g>
+
+  <!-- bass 1 -->
+  <rect x="40" y="160" width="1120" height="250" rx="8" fill="#1f2125" stroke="#ff8a1a" stroke-width="2"/>
+  <text x="60" y="196" font-size="24" font-weight="800" fill="#ff8a1a">BASS LINE 1 · pattern A3</text>
+  <text x="560" y="196" font-size="18" fill="#9a9ca3">cutoff · reso · env · decay · accent as one big knob row →</text>
+  <g font-size="18" text-anchor="middle" fill="#d6d7db">
+    <!-- 16 big step cells -->
+    <g id="steps">
+      <rect x="60" y="216" width="62" height="96" rx="6" fill="#ff8a1a"/><text x="91" y="262" fill="#1a1a1a" font-weight="800" font-size="24">C</text><text x="91" y="296" fill="#1a1a1a">ACC</text>
+      <rect x="130" y="216" width="62" height="96" rx="6" fill="#2c2f35"/><text x="161" y="262" font-size="24">C</text><text x="161" y="296" fill="#9a9ca3">↑</text>
+      <rect x="200" y="216" width="62" height="96" rx="6" fill="#2c2f35"/><text x="231" y="262" font-size="24">D#</text><text x="231" y="296" fill="#9a9ca3">SLIDE</text>
+      <rect x="270" y="216" width="62" height="96" rx="6" fill="#2c2f35"/><text x="301" y="262" font-size="24">–</text>
+      <rect x="340" y="216" width="62" height="96" rx="6" fill="#2c2f35"/><text x="371" y="262" font-size="24">G</text>
+      <rect x="410" y="216" width="62" height="96" rx="6" fill="#2c2f35"/><text x="441" y="262" font-size="24">G</text><text x="441" y="296" fill="#9a9ca3">↓</text>
+      <rect x="480" y="216" width="62" height="96" rx="6" fill="#2c2f35" stroke="#f2f2f2" stroke-width="3"/><text x="511" y="262" font-size="24">?</text><text x="511" y="296" fill="#f2f2f2">cursor</text>
+      <rect x="550" y="216" width="62" height="96" rx="6" fill="#2c2f35"/>
+      <rect x="620" y="216" width="62" height="96" rx="6" fill="#2c2f35"/>
+      <rect x="690" y="216" width="62" height="96" rx="6" fill="#2c2f35"/>
+      <rect x="760" y="216" width="62" height="96" rx="6" fill="#2c2f35"/>
+      <rect x="830" y="216" width="62" height="96" rx="6" fill="#2c2f35"/>
+      <rect x="900" y="216" width="62" height="96" rx="6" fill="#2c2f35"/>
+      <rect x="970" y="216" width="62" height="96" rx="6" fill="#2c2f35"/>
+      <rect x="1040" y="216" width="62" height="96" rx="6" fill="#2c2f35"/>
+      <rect x="1110" y="216" width="40" height="96" rx="6" fill="#2c2f35"/>
+    </g>
+    <text x="60" y="350" text-anchor="start" fill="#d6d7db" font-size="19">STEP REC: type notes on the computer keyboard (A W S E D F T G Y H U J K = one octave),</text>
+    <text x="60" y="378" text-anchor="start" fill="#d6d7db" font-size="19">Z / X octave, Shift = accent, Tab = slide, Space = rest. The cursor moves on by itself.</text>
+  </g>
+
+  <!-- bass 2 -->
+  <rect x="40" y="426" width="1120" height="120" rx="8" fill="#1f2125" stroke="#555" stroke-width="2"/>
+  <text x="60" y="462" font-size="24" font-weight="800" fill="#d6d7db">BASS LINE 2 · pattern B1</text>
+  <g fill="#2c2f35">
+    <rect x="60" y="478" width="62" height="52" rx="6"/><rect x="130" y="478" width="62" height="52" rx="6"/><rect x="200" y="478" width="62" height="52" rx="6"/><rect x="270" y="478" width="62" height="52" rx="6"/>
+    <rect x="340" y="478" width="62" height="52" rx="6"/><rect x="410" y="478" width="62" height="52" rx="6"/><rect x="480" y="478" width="62" height="52" rx="6"/><rect x="550" y="478" width="62" height="52" rx="6"/>
+    <rect x="620" y="478" width="62" height="52" rx="6"/><rect x="690" y="478" width="62" height="52" rx="6"/><rect x="760" y="478" width="62" height="52" rx="6"/><rect x="830" y="478" width="62" height="52" rx="6"/>
+    <rect x="900" y="478" width="62" height="52" rx="6"/><rect x="970" y="478" width="62" height="52" rx="6"/><rect x="1040" y="478" width="62" height="52" rx="6"/><rect x="1110" y="478" width="40" height="52" rx="6"/>
+  </g>
+  <text x="600" y="462" font-size="18" fill="#9a9ca3">the other line stays readable but compact; click to swap which is big</text>
+
+  <!-- notes -->
+  <g font-size="19" fill="#d6d7db">
+    <text x="40" y="592" font-weight="800" fill="#f2f2f2">How it works</text>
+    <text x="40" y="624">• SHOW picks what fills the screen; everything else leaves. Two 303s, one or both drum machines.</text>
+    <text x="40" y="652">• Both 303s loop together, so you write one line against the other. Drums: the grid view of each machine.</text>
+    <text x="40" y="680">• HEAR FX turns effects on for listening only; the song's own effect settings and automation stay untouched.</text>
+    <text x="40" y="708">• ZOOM scales the whole view (it's all vector). Remembered per stage, and a global minimum text size.</text>
+    <text x="40" y="736">• Later: MIDI keyboard input for step and live (quantized) note entry.</text>
+  </g>
+</svg>

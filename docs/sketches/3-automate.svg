@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1200" height="800" fill="#141518"/>
+  <text x="40" y="54" font-size="32" font-weight="800" fill="#f2f2f2">3 · AUTOMATE: A–B loop, pass after pass</text>
+
+  <!-- transport / mode -->
+  <rect x="40" y="76" width="1120" height="64" rx="8" fill="#23252a"/>
+  <g font-size="20" font-weight="800" text-anchor="middle">
+    <rect x="56" y="88" width="120" height="40" rx="6" fill="#e0453a"/><text x="116" y="115" fill="#fff">● REC</text>
+    <text x="250" y="115" fill="#9a9ca3">MODE:</text>
+    <rect x="300" y="88" width="140" height="40" rx="6" fill="#ffd21a"/><text x="370" y="115" fill="#1a1a1a">LATCH</text>
+    <rect x="450" y="88" width="140" height="40" rx="6" fill="#2c2f35"/><text x="520" y="115" fill="#d6d7db">TOUCH</text>
+    <rect x="740" y="88" width="190" height="40" rx="6" fill="#2c2f35"/><text x="835" y="115" fill="#d6d7db">↶ UNDO PASS</text>
+    <rect x="950" y="88" width="190" height="40" rx="6" fill="#2c2f35"/><text x="1045" y="115" fill="#d6d7db">PASS 3 · bars 9–12</text>
+  </g>
+
+  <!-- timeline -->
+  <rect x="40" y="160" width="1120" height="250" rx="8" fill="#1f2125"/>
+  <g font-size="18" fill="#9a9ca3">
+    <text x="60" y="190">1</text><text x="200" y="190">5</text><text x="340" y="190">9</text><text x="480" y="190">13</text><text x="620" y="190">17</text><text x="760" y="190">21</text><text x="900" y="190">25</text><text x="1040" y="190">29</text>
+  </g>
+  <rect x="340" y="200" width="140" height="196" fill="#ffd21a" fill-opacity="0.12"/>
+  <rect x="330" y="198" width="22" height="30" rx="4" fill="#ffd21a"/><text x="341" y="220" font-size="18" font-weight="800" text-anchor="middle" fill="#1a1a1a">A</text>
+  <rect x="468" y="198" width="22" height="30" rx="4" fill="#ffd21a"/><text x="479" y="220" font-size="18" font-weight="800" text-anchor="middle" fill="#1a1a1a">B</text>
+  <line x1="420" y1="200" x2="420" y2="396" stroke="#5dff4a" stroke-width="3"/>
+  <g font-size="18" fill="#d6d7db">
+    <text x="60" y="262">303-1 CUTOFF</text>
+    <polyline points="200,280 260,270 340,262 360,250 380,240 400,232 420,228" fill="none" stroke="#ff8a1a" stroke-width="3"/>
+    <polyline points="420,228 480,228" fill="none" stroke="#ff8a1a" stroke-width="3" stroke-dasharray="6 6"/>
+    <polyline points="480,262 600,262 760,270 1140,270" fill="none" stroke="#ff8a1a" stroke-width="3" opacity="0.6"/>
+    <text x="60" y="322">303-1 RESO</text>
+    <polyline points="200,330 1140,330" fill="none" stroke="#ff8a1a" stroke-width="3" opacity="0.6"/>
+    <text x="60" y="382">DELAY FEEDBK</text>
+    <polyline points="200,390 1140,390" fill="none" stroke="#5fe08a" stroke-width="3" opacity="0.6"/>
+  </g>
+
+  <!-- touched knobs -->
+  <rect x="40" y="428" width="560" height="200" rx="8" fill="#1f2125"/>
+  <text x="60" y="464" font-size="22" font-weight="800" fill="#f2f2f2">Touched = recorded</text>
+  <g font-size="18" text-anchor="middle" fill="#d6d7db">
+    <circle cx="120" cy="540" r="48" fill="#2c2f35" stroke="#e0453a" stroke-width="4"/><line x1="120" y1="540" x2="150" y2="504" stroke="#f2f2f2" stroke-width="5"/><text x="120" y="612">CUTOFF 1 ●</text>
+    <circle cx="250" cy="540" r="48" fill="#2c2f35" stroke="#e0453a" stroke-width="4"/><line x1="250" y1="540" x2="228" y2="500" stroke="#f2f2f2" stroke-width="5"/><text x="250" y="612">ENV MOD 1 ●</text>
+    <circle cx="380" cy="540" r="48" fill="#2c2f35" stroke="#555" stroke-width="4"/><line x1="380" y1="540" x2="380" y2="496" stroke="#9a9ca3" stroke-width="5"/><text x="380" y="612" fill="#9a9ca3">RESO 1</text>
+    <circle cx="510" cy="540" r="48" fill="#2c2f35" stroke="#555" stroke-width="4"/><line x1="510" y1="540" x2="540" y2="510" stroke="#9a9ca3" stroke-width="5"/><text x="510" y="612" fill="#9a9ca3">DLY FB</text>
+  </g>
+
+  <!-- explanation -->
+  <g font-size="19" fill="#d6d7db">
+    <text x="630" y="464" font-weight="800" fill="#f2f2f2">Modes</text>
+    <text x="630" y="498"><tspan font-weight="800" fill="#ffd21a">LATCH</tspan> (default) – from your first touch until B,</text>
+    <text x="650" y="524">the knob is rewritten; let go and the last</text>
+    <text x="650" y="550">value holds to the end of the pass.</text>
+    <text x="630" y="590"><tspan font-weight="800">TOUCH</tspan> – rewrites only while you're moving the</text>
+    <text x="650" y="616">knob; let go and the old curve continues.</text>
+  </g>
+  <g font-size="19" fill="#9a9ca3">
+    <text x="40" y="676">• Drag A and B on the ruler (snaps to bars; to beats with Shift). LOOP plays A→B forever while REC is on.</text>
+    <text x="40" y="704">• No arming: every knob you touch in a pass is recorded (red dot); untouched knobs keep their curves.</text>
+    <text x="40" y="732">• Each loop pass is one take: UNDO PASS restores the curves as they were when the pass began.</text>
+    <text x="40" y="760">• Pattern changes and mutes stay in ARRANGE; AUTOMATE only writes knob and fader movement.</text>
+  </g>
+</svg>

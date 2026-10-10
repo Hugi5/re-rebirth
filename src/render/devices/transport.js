@@ -1,6 +1,6 @@
 import { songBars, TICKS_PER_BAR } from '../../song/song.js';
 import { hits } from '../../ui/hits.js';
-import { click, release, repeat } from '../../ui/handlers.js';
+import { click, release, repeat, tempoDrag } from '../../ui/handlers.js';
 import { openAbout } from '../about.js';
 import { openAutomation } from '../automation.js';
 import { openLibrary } from '../library.js';
@@ -53,6 +53,7 @@ export class Transport {
     hits.rect(ctx, 16, 14, LOGO_W, 40, { ...click(() => openAbout(state)), cursor: 'pointer' });
     this.drawSong(ctx);
     this.shuffle.draw(ctx, state);
+    this.drawFocus(ctx);
 
     // The control cluster is laid out for a 772-wide bar; keep it beside the master knob.
     ctx.save();
@@ -63,7 +64,7 @@ export class Transport {
     lcd(ctx, 240, 19, 104, 40);
     const tempo = t.tempo.toFixed(1).padStart(5, ' ');
     sevenSeg(ctx, tempo, 240 + (104 - sevenSegWidth(tempo, 15)) / 2, 26, 15, 26);
-    hits.rect(ctx, 240, 19, 104, 40, this.tempoDrag());
+    hits.rect(ctx, 240, 19, 104, 40, tempoDrag(state));
     this.nudgeButton(ctx, 'up', 19, 1);
     this.nudgeButton(ctx, 'down', 40, -1);
 
@@ -152,33 +153,21 @@ export class Transport {
     hits.rect(ctx, ax, 47, aw, 15, click(() => openAutomation(state), 'song.automation'));
   }
 
+  // Into the focus stages; their stage bar leads back to the rack. Fits between
+  // SHUFFLE and the control cluster even at the minimum rack width.
+  drawFocus(ctx) {
+    const x = 518;
+    const key = 'transport.focus';
+    const off = button(ctx, x, 24, 56, 26, { pressed: hits.isPressed(key) });
+    text(ctx, 'PATTERNS', x + 28, 37 + off, { size: 6, weight: 800, color: C.inkLight, spacing: 0.3 });
+    text(ctx, 'FOCUS', x + 28, 61, LABEL);
+    hits.rect(ctx, x, 24, 56, 26, click(() => (this.state.ui.stage = 'patterns'), key));
+  }
+
   nudgeButton(ctx, dir, y, sign) {
     const key = `transport.tempo.${dir}`;
     const off = button(ctx, 349, y, 16, 19, { pressed: hits.isPressed(key) });
     icon(ctx, dir, 357, y + 9.5 + off, 6, C.inkLight);
     hits.rect(ctx, 349, y, 16, 19, click((ev) => this.state.setTempo(this.state.transport.tempo + sign * (ev.fine ? 0.1 : 1)), key));
   }
-
-  // Drag the readout: 2 px per BPM, shift for 0.1 steps.
-  tempoDrag() {
-    const { state } = this;
-    const nudge = (amount) => state.setTempo(state.transport.tempo + amount);
-    return {
-      cursor: 'ns-resize',
-      down: () => {
-        let acc = 0;
-        return {
-          move: (ev) => {
-            acc -= ev.ddy / (ev.fine ? 20 : 2);
-            const whole = Math.trunc(acc);
-            if (!whole) return;
-            acc -= whole;
-            nudge(whole * (ev.fine ? 0.1 : 1));
-          },
-        };
-      },
-      wheel: (ev) => nudge(-Math.sign(ev.delta) * (ev.fine ? 0.1 : 1)),
-    };
-  }
-
 }
