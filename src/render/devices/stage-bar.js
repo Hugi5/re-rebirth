@@ -67,10 +67,12 @@ export class StageBar {
     const { state, app } = this;
     const t = state.transport;
     const { y, h } = ROW;
+    const patterns = state.ui.stage === 'patterns';
     const buttons = [
       ['stop', () => app.clock.stop(), !t.playing, C.ledRed],
       ['play', () => app.clock.play(), t.playing, C.ledGreen],
-      ['rec', () => app.clock.setRec(!t.rec), t.rec, C.ledRed],
+      // REC records the song, which PATTERNS doesn't play (see main.js syncStageMode).
+      ...(patterns ? [] : [['rec', () => app.clock.setRec(!t.rec), t.rec, C.ledRed]]),
     ];
     for (const [kind, fn, on, color] of buttons) {
       const key = `stage.${kind}`;
@@ -90,8 +92,21 @@ export class StageBar {
 
     x += 50;
     lcd(ctx, x, y, 46, h);
-    const pos = `${String(t.bar).padStart(3, '0')}.${String(Math.max(0, t.step) + 1).padStart(2, '0')}`;
+    const pos = patterns ? this.patternPosition() : `${String(t.bar).padStart(3, '0')}.${String(Math.max(0, t.step) + 1).padStart(2, '0')}`;
     sevenSeg(ctx, pos, x + (46 - sevenSegWidth(pos, 6.5)) / 2, y + 4.5, 6.5, h - 9);
+  }
+
+  // PATTERNS loops patterns, so bars mean nothing there: the shown machine's
+  // pattern and the step it's on ("B3 05"), or "--" while stopped.
+  patternPosition() {
+    const { state } = this;
+    const t = state.transport;
+    const id = state.ui.show;
+    const dev = state.device(id);
+    const index = dev.bank * 8 + dev.pattern;
+    const pos = t.playing && t.step >= 0 ? t.positions[id] : null;
+    const step = pos == null ? '--' : String(pos + 1).padStart(2, '0');
+    return `${'ABCD'[Math.floor(index / 8)]}${(index % 8) + 1} ${step}`;
   }
 
   // Four corner brackets; returns the button width.

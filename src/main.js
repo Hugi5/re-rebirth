@@ -29,6 +29,7 @@ const remember = async (file) => {
 const files = new Files(state, {
   beforeLoad: () => clock.t.playing && clock.stop(),
   onLoaded: (_, file) => {
+    syncStageMode({ loaded: true });
     notify(state.info.title || state.info.file || 'Loaded');
     library.current = null;
     if (file) remember(file).then((id) => (library.current = id));
@@ -55,6 +56,8 @@ app.midi = new Midi(state, engine, {
 let view = new Rack(state, app);
 let viewScale = 1;
 let chromeScale = 1;
+let modeStage = null; // the stage the play mode was last set for
+let rackMode = 'pattern'; // the rack's own PATTERN / SONG choice, kept while away
 
 if (!files.restore()) loadDemo(state);
 loadPrefs(state.ui);
@@ -80,8 +83,20 @@ function notify(message) {
   requestRender();
 }
 
+// PATTERNS loops the patterns you pick (pattern mode), AUTOMATE plays and
+// records the song (song mode); the rack keeps its own switch, restored on
+// return. A song opened meanwhile brings its mode for the rack.
+function syncStageMode({ loaded = false } = {}) {
+  const stage = state.ui.stage;
+  if (loaded || modeStage === null || modeStage === 'rack') rackMode = state.transport.mode;
+  if (stage === modeStage && !loaded) return;
+  modeStage = stage;
+  clock.setMode(stage === 'patterns' ? 'pattern' : stage === 'automate' ? 'song' : rackMode);
+}
+
 function render() {
   frame = 0;
+  syncStageMode();
   // A stage or instrument change: lay out again (resize renders).
   if (viewKey(state) !== view.key) return resize();
   // Draw in design units; the transform handles window scale + HiDPI. One exact
