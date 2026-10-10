@@ -24,17 +24,16 @@ const EDIT_BUTTONS = [
   ['ACCENT', 0, 1, (s) => s.accent, (s) => (s.accent = !s.accent)],
   ['SLIDE', 54, 1, (s) => s.slide, (s) => (s.slide = !s.slide)],
 ];
-// Narrower than the rack panel, the keyboard, edit buttons and pattern selector
-// move below a full-width step grid (focus views).
-export const BASS_MIN = { w: 772, h: 156 };
+// Stacked (focus views): the keyboard, edit buttons and pattern selector move
+// below a full-width step grid, so the panel fits a narrower, taller space.
 export const BASS_STACKED_MIN = { w: 580, h: 222 };
 
 // Positions for a panel of size w x h (minimum 772 x 156). Extra width spreads the
 // knobs and steps, with the pattern selector anchored right; extra height is shared
 // by the knob section (content centred) and the sequencer (rows spread apart).
 // The knob section (18..80) fits the pattern selector with equal room above and below.
-function layout(w, h) {
-  if (w < BASS_MIN.w) return stackedLayout(w, h);
+function layout(w, h, stacked) {
+  if (stacked) return stackedLayout(w, h);
   const extraH = Math.max(0, h - 156);
   const knobExtra = (extraH * 62) / 138;
   const seqY = 80 + knobExtra;
@@ -100,9 +99,9 @@ function stackedLayout(w, h) {
 const NEXT_OCTAVE = { 0: 1, 1: -1, '-1': 0 };
 
 export class Bassline {
-  constructor(state, app, x, y, w, h, { id, number }) {
+  constructor(state, app, x, y, w, h, { id, number, stacked = false }) {
     Object.assign(this, { state, app, x, y, w, h, id, number });
-    const L = (this.L = layout(w, h));
+    const L = (this.L = layout(w, h, stacked));
     const P = (k) => `${id}.${k}`;
     this.waveParam = P('waveform');
     this.onParam = P('on');

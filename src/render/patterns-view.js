@@ -1,9 +1,9 @@
 // PATTERNS stage: only the instruments being written, as large as the window
-// allows. The bass lines switch to their stacked layout (full-width step grid);
-// the drum machines keep their rack layout.
+// allows, in their stacked layouts (full-width step grids; the drum machines
+// always show all lanes).
 import { BASS_IDS } from '../state.js';
 import { BASS_STACKED_MIN, Bassline } from './devices/bassline.js';
-import { DrumMachine, R808, R909 } from './devices/drum-machine.js';
+import { DRUM_STACKED_MIN, DrumMachine, R808, R909 } from './devices/drum-machine.js';
 import { keysHint, STAGE_BAR_H, STAGE_BAR_MIN_W, StageBar } from './devices/stage-bar.js';
 import { rrect } from './primitives.js';
 import { C } from './theme.js';
@@ -11,7 +11,6 @@ import { drawWindows } from './windows.js';
 
 const MARGIN = 6;
 const GAP = 6;
-const DRUM_W = 772;
 
 export const SHOWS = [
   ['bass1', 'BASS 1', ['bass1']],
@@ -24,7 +23,7 @@ export const SHOWS = [
 const DRUMS = { r808: R808, r909: R909 };
 
 export const shownDevices = (state) => (SHOWS.find(([id]) => id === state.ui.show) ?? SHOWS[0])[2];
-const minSize = (id) => (DRUMS[id] ? { w: DRUM_W, h: DRUMS[id].base.h } : BASS_STACKED_MIN);
+const minSize = (id) => (DRUMS[id] ? DRUM_STACKED_MIN : BASS_STACKED_MIN);
 // Devices only; the bar is chrome, sized apart (see main.js resize).
 function devicesSize(ids) {
   const sizes = ids.map(minSize);
@@ -78,8 +77,8 @@ export class PatternsView {
     this.devices = ids.map((id, i) => {
       const h = (room * mins[i]) / total;
       const d = DRUMS[id]
-        ? new DrumMachine(state, app, MARGIN, y, w, h, DRUMS[id])
-        : new Bassline(state, app, MARGIN, y, w, h, { id, number: BASS_IDS.indexOf(id) + 1 });
+        ? new DrumMachine(state, app, MARGIN, y, w, h, DRUMS[id], { stacked: true })
+        : new Bassline(state, app, MARGIN, y, w, h, { id, number: BASS_IDS.indexOf(id) + 1, stacked: true });
       y += h + GAP;
       return d;
     });

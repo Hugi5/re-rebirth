@@ -45,17 +45,39 @@ const GRID_HINT = {
   r808: 'CLICK A LANE NAME TO HEAR IT',
   r909: 'LANE NAME: LISTEN \u00B7 SHIFT-CLICK: ACCENT / FLAM',
 };
+const SELECTOR_W = 176;
+// Stacked (focus views): always the all-lanes grid, across the whole panel, with
+// the selected instrument's knobs and the pattern selector in a row below.
+const STACKED_BOTTOM_H = 66;
+export const DRUM_STACKED_MIN = { w: 580, h: HEADER_H + 4 + 162 + 4 + STACKED_BOTTOM_H };
 
 export class DrumMachine {
-  constructor(state, app, x, y, w, h, cfg) {
-    Object.assign(this, { state, app, x, y, w, h, cfg, id: cfg.id });
+  constructor(state, app, x, y, w, h, cfg, { stacked = false } = {}) {
+    Object.assign(this, { state, app, x, y, w, h, cfg, id: cfg.id, stacked });
     this.V = layout(h, cfg.base);
+    this.G = this.gridGeometry();
     this.knobs = [];
     state.define(`${cfg.id}.on`, 1);
     this.groups = this.layoutGroups();
     this.lanes = Object.keys(cfg.trackNames);
     this.gridKnobs = this.layoutGridKnobs();
-    this.selector = new PatternSelector({ id: cfg.id, x: 20, y: this.V.selectorY, w: 176, theme: cfg.selector, state });
+    this.selector = new PatternSelector({ id: cfg.id, ...this.G.selector, w: SELECTOR_W, theme: cfg.selector, state });
+  }
+
+  // Where the all-lanes screen, the selected instrument (side) and the pattern
+  // selector go: beside each other in the rack, stacked in focus views.
+  gridGeometry() {
+    const { w, h, V } = this;
+    const sy = HEADER_H + 4;
+    if (!this.stacked) {
+      const side = { x0: SIDE_X0, x1: SIDE_X1, nameY: 27.5, knobY: HEADER_H + (V.bottomY - HEADER_H) * 0.55, hintY: V.bottomY - 7 };
+      return { sx: GRID_X, sy, sw: w - 14 - GRID_X, sh: h - 6 - sy, side, selector: { x: 20, y: V.selectorY } };
+    }
+    const sh = h - sy - 4 - STACKED_BOTTOM_H;
+    const y0 = sy + sh + 4;
+    const selX = w - 20 - SELECTOR_W;
+    const side = { x0: 18, x1: selX - 28, nameY: y0 + 9, knobY: y0 + 34, hintY: h - 6 };
+    return { sx: 14, sy, sw: w - 28, sh, bottomY: y0, side, selector: { x: selX, y: y0 + (STACKED_BOTTOM_H - SELECTOR_H) / 2 + 1 } };
   }
 
   // Spreads instrument groups across the panel; each group is a small knob grid.
@@ -106,12 +128,12 @@ export class DrumMachine {
   // One row of knobs per instrument group, shown while the grid replaces the knob section.
   layoutGridKnobs() {
     const { cfg } = this;
-    const y = HEADER_H + (this.V.bottomY - HEADER_H) * 0.55;
+    const { x0: left, x1: right, knobY: y } = this.G.side;
     return Object.fromEntries(
       cfg.groups.map((g) => {
         const n = g.knobs.length;
-        const cell = Math.min(44, (SIDE_X1 - SIDE_X0) / n);
-        const x0 = SIDE_X0 + (SIDE_X1 - SIDE_X0 - cell * n) / 2;
+        const cell = Math.min(44, (right - left) / n);
+        const x0 = left + (right - left - cell * n) / 2;
         const knobs = g.knobs.map(
           ([key, label], i) =>
             new Knob({ x: x0 + (i + 0.5) * cell, y, r: cfg.layout.r, param: `${cfg.id}.${g.id}.${key}`, label, style: cfg.knob, labelColor: cfg.theme.ink, labelSize: 5.6, ticks: 9 }),
@@ -124,17 +146,20 @@ export class DrumMachine {
   draw(ctx) {
     const { w, h, cfg, state } = this;
     const t = cfg.theme;
-    const BOTTOM_Y = this.V.bottomY;
+    // Stacked: knobs stay on the panel finish, and only the pattern selector's
+    // corner gets the dark bottom-section finish, as it has in the rack.
+    const [bx, by] = this.stacked ? [this.G.selector.x - 12, this.G.bottomY] : [0, this.V.bottomY];
 
     panel(ctx, 0, 0, w, h, t.panel);
-    if (t.brushed) brushed(ctx, 0, HEADER_H, w, BOTTOM_Y - HEADER_H, t.brushed);
-    ctx.fillStyle = vgrad(ctx, BOTTOM_Y, h, t.bottom);
-    ctx.fillRect(0, BOTTOM_Y, w, h - BOTTOM_Y);
+    if (t.brushed) brushed(ctx, 0, HEADER_H, w, (this.stacked ? h : by) - HEADER_H, t.brushed);
+    ctx.fillStyle = vgrad(ctx, by, h, t.bottom);
+    ctx.fillRect(bx, by, w - bx, h - by);
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(0, BOTTOM_Y, w, 1);
+    ctx.fillRect(bx, by, w - bx, 1);
+    if (bx) ctx.fillRect(bx, by, 1, h - by);
 
     this.drawHeader(ctx);
-    if (state.ui.grid[cfg.id]) {
+    if (this.stacked || state.ui.grid[cfg.id]) {
       this.drawGrid(ctx);
     } else {
       this.drawGroups(ctx);
@@ -184,8 +209,10 @@ export class DrumMachine {
     led(ctx, x + 6, 9, 2.3, state.on01(onParam), C.ledGreen);
     text(ctx, 'ON', x + 12, 9.5, { size: 6, align: 'left', color: C.inkMuted });
     hits.rect(ctx, x + 1, 2, 26, 14, toggle(state, onParam));
-    text(ctx, cfg.subtitle, x + 34, 9.5, { size: 6, align: 'left', color: C.inkMuted, spacing: 1.2 });
     const left = drawPatternTools(ctx, { state, id: cfg.id, right: w - 10, led: t.led });
+    // Stacked panels are narrow and always show the grid: no subtitle, no toggle.
+    if (this.stacked) return;
+    text(ctx, cfg.subtitle, x + 34, 9.5, { size: 6, align: 'left', color: C.inkMuted, spacing: 1.2 });
 
     // Grid toggle: every lane of the pattern at once instead of the knobs.
     const on = state.ui.grid[cfg.id];
@@ -199,13 +226,11 @@ export class DrumMachine {
   }
 
   drawGrid(ctx) {
-    const { w, h, cfg, state } = this;
+    const { cfg, state } = this;
     const t = cfg.theme;
     const dev = state.drums[cfg.id];
     const pattern = state.pattern(cfg.id);
-    const sy = HEADER_H + 4;
-    const sw = w - 14 - GRID_X;
-    const sh = h - 6 - sy;
+    const { sx: GRID_X, sy, sw, sh } = this.G;
     rrect(ctx, GRID_X, sy, sw, sh, 2.5);
     ctx.fillStyle = vgrad(ctx, sy, sy + sh, C.screen);
     ctx.fill();
@@ -277,19 +302,20 @@ export class DrumMachine {
     const dev = state.drums[cfg.id];
     const group = cfg.groups.find((g) => g.tracks.includes(dev.selected)) ?? cfg.groups[0];
     const name = cfg.trackNames[dev.selected] ?? group.label;
-    const cx = (SIDE_X0 + SIDE_X1) / 2;
+    const side = this.G.side;
+    const cx = (side.x0 + side.x1) / 2;
     const tw = textWidth(ctx, name, GROUP_LABEL) + 10;
-    rrect(ctx, cx - tw / 2, 22, tw, 10, 2);
+    rrect(ctx, cx - tw / 2, side.nameY - 5.5, tw, 10, 2);
     ctx.fillStyle = t.selBg;
     ctx.fill();
-    text(ctx, name, cx, 27.5, { ...GROUP_LABEL, color: t.selInk });
+    text(ctx, name, cx, side.nameY, { ...GROUP_LABEL, color: t.selInk });
     const knobs = this.gridKnobs[group.id];
     for (const k of knobs) k.draw(ctx, state);
     if (group.alt) {
       const last = knobs.at(-1);
       this.drawSwitch(ctx, { x: last.x + cfg.layout.r + 24, y: last.y - 5.5, param: `${cfg.id}.${group.id}.alt`, labels: group.alt });
     }
-    text(ctx, GRID_HINT[cfg.id], cx, this.V.bottomY - 7, { size: 5, weight: 700, color: t.ink, spacing: 0.4 });
+    text(ctx, GRID_HINT[cfg.id], cx, side.hintY, { size: 5, weight: 700, color: t.ink, spacing: 0.4 });
   }
 
   // Click a cell to flip it and drag to paint that value across the grid;
