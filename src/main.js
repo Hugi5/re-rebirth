@@ -44,6 +44,7 @@ const app = { clock, engine, files, library, notify, toggleFullscreen };
 // Controls register their parameter defaults here, so build the whole rack
 // before loading, whatever stage is shown.
 let view = new Rack(state, app);
+let viewScale = 1;
 let layout = null;
 
 if (!files.restore()) loadDemo(state);
@@ -74,8 +75,11 @@ function render() {
   frame = 0;
   // A stage, SHOW or zoom change: lay out again (resize renders).
   if (layoutKey(state) !== layout) return resize();
-  // Draw in design units; the transform handles window scale + HiDPI.
-  ctx.setTransform(canvas.width / view.width, 0, 0, canvas.height / view.height, 0, 0);
+  // Draw in design units; the transform handles window scale + HiDPI. One exact
+  // scale for both axes (not canvas size / view size, which carries rounding),
+  // so the stage bar lands on the same pixels whichever devices are below it.
+  const s = viewScale * (window.devicePixelRatio || 1);
+  ctx.setTransform(s, 0, 0, s, 0, 0);
   hits.clear();
   view.draw(ctx);
   const lib = state.ui.library;
@@ -110,16 +114,20 @@ function resize() {
   const k = chromeScale / scale;
   // Never narrower than the chrome needs at its scale, even past the stretch limit.
   const floorW = Math.max(min.w, chromeW * k);
-  const width = Math.round(Math.min(Math.max(min.w * stretch.w, floorW), Math.max(floorW, W / scale)));
-  const height = Math.round(Math.min(min.h * stretch.h, Math.max(min.h, free / scale)) + chrome * k);
+  // Fractional on purpose: a view that fills the window then measures exactly
+  // W x H CSS pixels, whatever its scale.
+  const width = Math.min(Math.max(min.w * stretch.w, floorW), Math.max(floorW, W / scale));
+  const height = Math.min(min.h * stretch.h, Math.max(min.h, free / scale)) + chrome * k;
   const stale = width !== view.width || height !== view.height || viewKey(state) !== view.key || (chrome && k !== view.chromeScale);
   if (stale) view = new View(state, app, width, height, k);
   if (layoutKey(state) !== layout) {
     layout = layoutKey(state);
     savePrefs(state.ui);
   }
-  const cssW = Math.floor(view.width * scale);
-  const cssH = Math.floor(view.height * scale);
+  viewScale = scale;
+  // The epsilon keeps float error (1439.9999) from losing a pixel.
+  const cssW = Math.floor(view.width * scale + 1e-6);
+  const cssH = Math.floor(view.height * scale + 1e-6);
   const dpr = window.devicePixelRatio || 1;
   canvas.style.width = `${cssW}px`;
   canvas.style.height = `${cssH}px`;
