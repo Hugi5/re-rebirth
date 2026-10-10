@@ -4,6 +4,8 @@ tracks
 *.wav
 .DS_Store
 tmp
+# Working notes, not for the repo.
+/docs/internal
 
 # Deploy settings (server, host); see .env.deploy.example.
 /.env*

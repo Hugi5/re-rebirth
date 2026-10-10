@@ -5,12 +5,30 @@ import { BASS_IDS } from '../state.js';
 
 const NOTE_KEYS = { KeyA: 0, KeyW: 1, KeyS: 2, KeyE: 3, KeyD: 4, KeyF: 5, KeyT: 6, KeyG: 7, KeyY: 8, KeyH: 9, KeyU: 10, KeyJ: 11, KeyK: 12 };
 
+// The bass line notes are written to: the one PATTERNS shows, if no window is open.
+export function stepTarget(state) {
+  const { ui } = state;
+  if (ui.stage !== 'patterns' || ui.about || ui.library || ui.automation) return null;
+  const [id] = shownDevices(state);
+  return BASS_IDS.includes(id) ? id : null;
+}
+
+// Writes a note (0..12 above C, octave -1..1) on the selected step, plays it,
+// and moves the cursor on. Shared by the computer keyboard and MIDI keys.
+export function enterNote(state, engine, id, { note, octave, accent }) {
+  const dev = state.bass[id];
+  const pattern = state.pattern(id);
+  const step = pattern.steps[dev.selectedStep];
+  Object.assign(step, { note, octave, gate: true, tie: false, accent, slide: false });
+  engine.auditionBass(id, step);
+  dev.selectedStep = (dev.selectedStep + 1) % pattern.length;
+}
+
 // Returns true when the key was a step-entry key (the caller re-renders and saves).
 export function stepKey(e, state, engine) {
-  const { ui } = state;
-  if (ui.stage !== 'patterns' || ui.about || ui.library || ui.automation || e.metaKey || e.ctrlKey || e.altKey) return false;
-  const [id] = shownDevices(state);
-  if (!BASS_IDS.includes(id)) return false;
+  if (e.metaKey || e.ctrlKey || e.altKey) return false;
+  const id = stepTarget(state);
+  if (!id) return false;
   const dev = state.bass[id];
   const pattern = state.pattern(id);
   const len = pattern.length;
@@ -18,10 +36,7 @@ export function stepKey(e, state, engine) {
   const step = pattern.steps[dev.selectedStep];
 
   if (e.code in NOTE_KEYS) {
-    if (e.repeat) return true;
-    Object.assign(step, { note: NOTE_KEYS[e.code], octave: state.ui.octave, gate: true, tie: false, accent: e.shiftKey, slide: false });
-    engine.auditionBass(id, step);
-    move(1);
+    if (!e.repeat) enterNote(state, engine, id, { note: NOTE_KEYS[e.code], octave: state.ui.octave, accent: e.shiftKey });
     return true;
   }
   switch (e.code) {

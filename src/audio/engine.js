@@ -481,6 +481,17 @@ export class AudioEngine {
     this.playDrums(id, this.state.pattern(id), 0, this.ctx.currentTime + 0.01, track);
   }
 
+  // A drum played live (MIDI pad), also over playback. `accent` as a step
+  // accent would be, 0..1.
+  hitDrum(id, track, accent = 0) {
+    this.start();
+    this.sync();
+    const [group, voice] = KITS[id][track];
+    const P = (k) => this.state.get(`${id}.${group}.${k}`);
+    const acc = 1 + accent * this.state.get(`${id}.ac.level`) * AC_DEPTH[id];
+    playHit(voice, { ctx: this.ctx, out: this.channels[id].input, noise: this.noise, kit: this.kits[id], t: this.ctx.currentTime + 0.005, acc }, P);
+  }
+
   // Peak meters with falloff. Returns true when any meter visibly moved.
   updateMeters() {
     if (!this.ctx) return false;

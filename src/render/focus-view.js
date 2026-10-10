@@ -7,6 +7,7 @@ import { BASS_STACKED_MIN, Bassline } from './devices/bassline.js';
 import { DRUM_STACKED_MIN, DrumMachine, R808, R909 } from './devices/drum-machine.js';
 import { keysHint, STAGE_BAR_H, STAGE_BAR_MIN_W, StageBar } from './devices/stage-bar.js';
 import { Timeline, TIMELINE_H } from './devices/timeline.js';
+import { MONO, rgba, rrect, text, textWidth } from './primitives.js';
 import { C } from './theme.js';
 import { drawWindows } from './windows.js';
 
@@ -115,8 +116,30 @@ class FocusView {
     for (const d of this.chrome) drawAt(ctx, d);
     ctx.restore();
     for (const d of this.devices) drawAt(ctx, d);
+    // Notices (the rack shows them in its song display), at chrome size.
+    const notice = state.notice && performance.now() < state.notice.until ? state.notice.text : null;
+    if (notice) {
+      ctx.save();
+      ctx.setTransform(chromeScale, 0, 0, chromeScale, 0, 0);
+      drawToast(ctx, notice, this.width / this.k, this.height / this.k);
+      ctx.restore();
+    }
     drawWindows(ctx, this.width, this.height, state, this.app);
   }
+}
+
+function drawToast(ctx, message, w, h) {
+  const opts = { size: 7, weight: 800, family: MONO, color: C.lcdGreenOn };
+  const tw = Math.min(w - 40, textWidth(ctx, message, opts) + 20);
+  const x = (w - tw) / 2;
+  const y = h - 34;
+  rrect(ctx, x, y, tw, 20, 4);
+  ctx.fillStyle = 'rgba(0,0,0,0.82)';
+  ctx.fill();
+  ctx.strokeStyle = rgba(C.lcdGreenOn, 0.5);
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+  text(ctx, message, w / 2, y + 10.5, opts);
 }
 
 function drawAt(ctx, d) {

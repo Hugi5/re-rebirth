@@ -22,6 +22,7 @@ Everything is drawn on a canvas and every sound is synthesized live with the Web
 - **Automation window:** every recorded control of the song as a graph over time. Pan, zoom, and click the ruler to jump.
 - **Songs:** opens ReBirth 2.0 / 2.0.1 `.rbs` files and saves its own `.json`. Work is autosaved in the browser.
 - **PATTERNS stage** (FOCUS on the transport): the one instrument you're writing (Bass Line 1 or 2, Drum 08 or 09), as big as the window allows. Type bass lines on the computer keyboard.
+- **MIDI:** knobs, faders, keys and pads, set up for an Arturia MiniLab 3, plus MIDI learn for any controller (Chrome, Edge, Firefox).
 - **AUTOMATE stage:** set an A–B loop on the song timeline, arm REC, and every knob you touch is recorded, pass after pass. LATCH or TOUCH, and UNDO PASS for takes you don't like.
 - The rack scales to fill the window. It works with a mouse, a trackpad or touch, including iPad and iPhone.
 

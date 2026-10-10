@@ -4,6 +4,7 @@ import { loadDemo } from './demo.js';
 import { addedMessage, closeLibrary, openLibrary, SEARCH_PLACEHOLDER } from './render/library.js';
 import { Rack } from './render/rack.js';
 import { viewClass, viewKey } from './render/views.js';
+import { Midi } from './midi.js';
 import { Clock } from './sequencer/clock.js';
 import { Files } from './song/files.js';
 import { collectDropped, Library } from './song/library.js';
@@ -41,6 +42,14 @@ const files = new Files(state, {
   },
 });
 const app = { clock, engine, files, library, notify, toggleFullscreen };
+// Hardware moves are edits like pointer ones: redraw and autosave.
+app.midi = new Midi(state, engine, {
+  onChange: () => {
+    requestRender();
+    files.autosave();
+  },
+  notify,
+});
 // Controls register their parameter defaults here, so build the whole rack
 // before loading, whatever stage is shown.
 let view = new Rack(state, app);
@@ -158,6 +167,11 @@ window.addEventListener('keydown', (e) => {
       search.input.dispatchEvent(new Event('input'));
       return;
     }
+  }
+  if (e.code === 'Escape' && state.ui.midiLearn) {
+    state.ui.midiLearn = null;
+    requestRender();
+    return;
   }
   if (e.code === 'Escape' && (state.ui.about || state.ui.library || state.ui.automation)) {
     if (state.ui.about) state.ui.about = false;

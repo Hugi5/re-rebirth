@@ -10,25 +10,40 @@ const FINE = 6;
 
 const scaled = (px, fine) => px / (KNOB_PX * (fine ? FINE : 1));
 
-export function knobDrag(state, param) {
+// While MIDI learn is on, a knob or fader is picked instead of moved (the next
+// hardware control moved gets it); double-click forgets its binding.
+function learnable(state, param, handler) {
   return {
+    ...handler,
+    cursor: state.ui.midiLearn ? 'crosshair' : handler.cursor,
+    down: (ev) => {
+      if (!state.ui.midiLearn) return handler.down(ev);
+      state.ui.midiLearn.param = param;
+      return {};
+    },
+    dblclick: () => (state.ui.midiLearn ? state.ui.midiLearn.forget?.(param) : handler.dblclick()),
+  };
+}
+
+export function knobDrag(state, param) {
+  return learnable(state, param, {
     cursor: 'ns-resize',
     down: () => ({ move: (ev) => state.set(param, state.get(param) - scaled(ev.ddy, ev.fine)) }),
     wheel: (ev) => state.set(param, state.get(param) - scaled(ev.delta, ev.fine) / 4),
     dblclick: () => state.reset(param),
-  };
+  });
 }
 
 // Drags in local units so the cap stays under the pointer at any zoom.
 export function faderDrag(state, param, travel) {
-  return {
+  return learnable(state, param, {
     cursor: 'ns-resize',
     down: () => ({
       move: (ev) => state.set(param, state.get(param) - (ev.p.y - ev.prev.y) / (travel * (ev.fine ? FINE : 1))),
     }),
     wheel: (ev) => state.set(param, state.get(param) - scaled(ev.delta, ev.fine) / 4),
     dblclick: () => state.reset(param),
-  };
+  });
 }
 
 export function click(fn, key) {

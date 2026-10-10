@@ -77,22 +77,36 @@ export function textWidth(ctx, s, opts = {}) {
   return ctx.measureText(s).width + spacing;
 }
 
+// One CSS pixel in the current drawing units: for strokes that shouldn't
+// thicken as the view scales up (like SVG's non-scaling-stroke).
+export function hairline(ctx) {
+  const m = ctx.getTransform();
+  return (globalThis.devicePixelRatio || 1) / Math.hypot(m.a, m.b);
+}
+
 export function panel(ctx, x, y, w, h, stops, { radius = 2, bevel = 0.3 } = {}) {
   rrect(ctx, x, y, w, h, radius);
   ctx.fillStyle = vgrad(ctx, y, y + h, stops);
   ctx.fill();
-  ctx.lineWidth = 1;
+  // Bevel: a lit top-left edge and a shaded bottom-right one, a hairline at any
+  // scale, following the rounded corners and meeting diagonally at the other two.
+  const lw = Math.min(1, hairline(ctx));
+  const i = lw / 2;
+  const r = Math.max(0, radius - i);
+  const [l, t, rt, b] = [x + i + r, y + i + r, x + w - i - r, y + h - i - r]; // corner centres
+  const q = Math.PI / 4;
+  ctx.lineWidth = lw;
   ctx.strokeStyle = `rgba(255,255,255,${bevel})`;
   ctx.beginPath();
-  ctx.moveTo(x + 0.5, y + h - radius);
-  ctx.lineTo(x + 0.5, y + 0.5);
-  ctx.lineTo(x + w - radius, y + 0.5);
+  ctx.arc(l, b, r, 3 * q, 4 * q);
+  ctx.arc(l, t, r, 4 * q, 6 * q);
+  ctx.arc(rt, t, r, 6 * q, 7 * q);
   ctx.stroke();
   ctx.strokeStyle = `rgba(0,0,0,${Math.min(1, bevel + 0.35)})`;
   ctx.beginPath();
-  ctx.moveTo(x + w - 0.5, y + radius);
-  ctx.lineTo(x + w - 0.5, y + h - 0.5);
-  ctx.lineTo(x + radius, y + h - 0.5);
+  ctx.arc(rt, t, r, 7 * q, 8 * q);
+  ctx.arc(rt, b, r, 0, 2 * q);
+  ctx.arc(l, b, r, 2 * q, 3 * q);
   ctx.stroke();
 }
 
@@ -291,9 +305,11 @@ export function button(ctx, x, y, w, h, { face = C.btnDark, pressed = false, rad
   rrect(ctx, x, y + off, w, h, radius);
   ctx.fillStyle = vgrad(ctx, y + off, y + off + h, face);
   ctx.fill();
+  // Top highlight, a hairline at any scale.
+  const lw = Math.min(0.7, hairline(ctx));
   ctx.strokeStyle = pressed ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.35)';
-  ctx.lineWidth = 0.7;
-  line(ctx, x + radius, y + off + 0.6, x + w - radius, y + off + 0.6);
+  ctx.lineWidth = lw;
+  line(ctx, x + radius, y + off + lw / 2 + 0.25, x + w - radius, y + off + lw / 2 + 0.25);
   return off;
 }
 

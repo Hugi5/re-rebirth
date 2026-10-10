@@ -16,12 +16,14 @@ export const STAGES = [
   ['automate', 'AUTOMATE'],
 ];
 const COPY = {
-  tempo: 'BPM',
+  midi: 'MIDI',
+  learn: 'LEARN',
   keys: (oct) => `A\u2013K NOTES \u00B7 Z X OCTAVE ${oct > 0 ? '+' : ''}${oct} \u00B7 \u21E7 ACCENT \u00B7 TAB SLIDE \u00B7 \u232B REST`,
 };
 const TAB = { size: 6.5, weight: 800, spacing: 0.3 };
 const ROW = { y: 5, h: 20 };
-const GROUP_GAP = 10;
+const GROUP_GAP = 8;
+const MIDI_LED = { off: null, waiting: C.ledYellow, on: C.ledGreen, denied: C.ledRed };
 
 export class StageBar {
   // options: [[value, label], ...] for the stage's own selector; current(), pick(value).
@@ -40,10 +42,29 @@ export class StageBar {
     this.drawTransport(ctx, x + GROUP_GAP - 3);
 
     let rx = w - 8;
-    rx -= this.drawFullscreen(ctx, rx) + GROUP_GAP;
+    rx -= this.drawFullscreen(ctx, rx) + 3;
+    rx -= this.drawMidi(ctx, rx) + GROUP_GAP;
     for (const [value, label] of [...this.options].reverse()) {
       rx -= tab(ctx, rx, ROW, label, this.current?.() === value, () => this.pick(value), `stage.opt.${value}`, 'right') + 3;
     }
+  }
+
+  // Connects MIDI, then toggles MIDI learn (lit, reading LEARN). The LED shows
+  // the connection. Not drawn where the browser has no Web MIDI.
+  drawMidi(ctx, rx) {
+    const { state, app } = this;
+    if (state.ui.midi === 'unavailable') return -3;
+    const learning = !!state.ui.midiLearn;
+    const bw = textWidth(ctx, COPY.learn, TAB) + 18;
+    const x = rx - bw;
+    const key = 'stage.midi';
+    const held = learning || hits.isPressed(key);
+    const off = button(ctx, x, ROW.y, bw, ROW.h, { face: held ? C.btnPressed : C.btnDark, pressed: held });
+    const color = MIDI_LED[state.ui.midi];
+    led(ctx, x + 6, ROW.y + ROW.h / 2 + off, 1.8, !!color, color ?? C.ledGreen);
+    text(ctx, learning ? COPY.learn : COPY.midi, x + 11 + (bw - 11) / 2, ROW.y + ROW.h / 2 + 0.5 + off, { ...TAB, color: learning ? C.ledYellow : C.inkLight });
+    hits.rect(ctx, x, ROW.y, bw, ROW.h, click(() => app.midi.press(), key));
+    return bw;
   }
 
   drawTransport(ctx, x) {
@@ -58,25 +79,23 @@ export class StageBar {
     for (const [kind, fn, on, color] of buttons) {
       const key = `stage.${kind}`;
       const held = on || hits.isPressed(key);
-      const off = button(ctx, x, y, 26, h, { face: held ? C.btnPressed : C.btnDark, pressed: held });
-      icon(ctx, kind, x + 13, y + h / 2 + off, 9, kind === 'rec' || on ? color : C.inkLight);
-      hits.rect(ctx, x, y, 26, h, click(fn, key));
-      x += 29;
+      const off = button(ctx, x, y, 24, h, { face: held ? C.btnPressed : C.btnDark, pressed: held });
+      icon(ctx, kind, x + 12, y + h / 2 + off, 9, kind === 'rec' || on ? color : C.inkLight);
+      hits.rect(ctx, x, y, 24, h, click(fn, key));
+      x += 27;
     }
 
     // Tempo: drag or scroll the readout (shift: 0.1 BPM), like the rack's.
     x += GROUP_GAP - 3;
-    lcd(ctx, x, y, 60, h);
+    lcd(ctx, x, y, 46, h);
     const tempo = t.tempo.toFixed(1).padStart(5, ' ');
-    sevenSeg(ctx, tempo, x + (48 - sevenSegWidth(tempo, 7.5)) / 2, y + 4, 7.5, h - 8);
-    text(ctx, COPY.tempo, x + 57, y + h / 2 + 0.5, { size: 4.5, weight: 800, align: 'right', color: C.lcdOn });
-    hits.rect(ctx, x, y, 60, h, tempoDrag(state));
+    sevenSeg(ctx, tempo, x + (46 - sevenSegWidth(tempo, 7.5)) / 2, y + 4, 7.5, h - 8);
+    hits.rect(ctx, x, y, 46, h, tempoDrag(state));
 
-    x += 64;
-    lcd(ctx, x, y, 50, h);
+    x += 50;
+    lcd(ctx, x, y, 46, h);
     const pos = `${String(t.bar).padStart(3, '0')}.${String(Math.max(0, t.step) + 1).padStart(2, '0')}`;
-    sevenSeg(ctx, pos, x + (50 - sevenSegWidth(pos, 6.5)) / 2, y + 4.5, 6.5, h - 9);
-    led(ctx, x + 56, y + h / 2, 2.2, t.playing && t.step % 4 === 0, C.ledYellow);
+    sevenSeg(ctx, pos, x + (46 - sevenSegWidth(pos, 6.5)) / 2, y + 4.5, 6.5, h - 9);
   }
 
   // Four corner brackets; returns the button width.

@@ -3,7 +3,7 @@
 import { canPaste, clearPattern, copyPattern, pastePattern, randomizePattern, setLength } from '../song/pattern-ops.js';
 import { hits } from '../ui/hits.js';
 import { click, knobDrag } from '../ui/handlers.js';
-import { button, icon, knob, lcd, led, sevenSeg, sevenSegWidth, text } from './primitives.js';
+import { button, circle, icon, knob, lcd, led, rgba, sevenSeg, sevenSegWidth, text } from './primitives.js';
 import { C } from './theme.js';
 
 export class Knob {
@@ -12,12 +12,25 @@ export class Knob {
   }
 
   draw(ctx, state) {
+    const learn = state.ui.midiLearn;
+    if (learn) drawLearnRing(ctx, this.x, this.y, this.r + 6, learn.param === this.param ? C.ledYellow : learn.mapped.has(this.param) ? C.ledGreen : null);
     knob(ctx, this.x, this.y, this.r, state.get(this.param), this.style, { ticks: this.ticks });
     hits.circle(ctx, this.x, this.y, this.r + 4, knobDrag(state, this.param));
     if (!this.label) return;
     const ly = this.labelPos === 'above' ? this.y - this.r - 10 : this.y + this.r + 7.5;
     text(ctx, this.label, this.x, ly, { size: this.labelSize, color: this.labelColor });
   }
+}
+
+// MIDI learn: yellow = waiting for a hardware control, green = has one.
+export function drawLearnRing(ctx, x, y, r, color) {
+  if (!color) return;
+  circle(ctx, x, y, r);
+  ctx.fillStyle = rgba(color, 0.22);
+  ctx.fill();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
 }
 
 const BANKS = 'ABCD';
