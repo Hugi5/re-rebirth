@@ -63,6 +63,7 @@ const keysOf = (events) => new Set(events.map((e) => e.key));
 export function insertBars(song, at, n) {
   for (const id of TRACK_IDS) for (const e of song.tracks[id]) if (e.tick >= at * T) e.tick += n * T;
   song.length += n * T;
+  if (song.loopEnd <= song.loopStart) return; // no A-B range to move
   if (song.loopStart >= at * T) song.loopStart += n * T;
   if (song.loopEnd > at * T) song.loopEnd += n * T;
 }

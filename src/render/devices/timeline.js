@@ -50,7 +50,7 @@ export class Timeline {
     const { transport: t, song } = state;
     const ui = state.ui;
     let x = 8;
-    x += tab(ctx, x, ROW, COPY.loop, t.loop, () => this.toggleLoop(), 'tl.loop') + 10;
+    x += tab(ctx, x, ROW, COPY.loop, t.loop, () => app.clock.toggleLoop(), 'tl.loop') + 10;
     x += tab(ctx, x, ROW, COPY.latch, ui.recMode === 'latch', () => (ui.recMode = 'latch'), 'tl.latch') + 4;
     x += tab(ctx, x, ROW, COPY.touch, ui.recMode === 'touch', () => (ui.recMode = 'touch'), 'tl.touch') + 10;
     const canUndo = this.player.canUndo();
@@ -68,15 +68,6 @@ export class Timeline {
     if (t.rec && t.playing) led(ctx, w - 10 - textWidth(ctx, status, { size: 7, weight: 800, family: MONO }) - 10, ROW.y + ROW.h / 2, 2.6, true, C.ledRed);
   }
 
-  // Turning the loop on with no range set loops four bars from here.
-  toggleLoop() {
-    const { transport: t, song } = this.state;
-    t.loop = !t.loop;
-    if (t.loop && song.loopEnd <= song.loopStart) {
-      song.loopStart = Math.max(0, t.bar - 1) * TICKS_PER_BAR;
-      song.loopEnd = song.loopStart + 4 * TICKS_PER_BAR;
-    }
-  }
 
   // Ticks shown on the ruler: the whole song, at least MIN_BARS, and the loop.
   rulerSpan() {

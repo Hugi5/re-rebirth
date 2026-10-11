@@ -3,6 +3,10 @@
 ## Unreleased
 
 ### New
+- **Keyboard shortcuts for everything**, and **/** to list the ones that work where you are (it changes with the stage, the instrument and the picker):
+  - 1–5 switch stages (RACK, PATTERNS, ARRANGE, AUTOMATE, MIX); ↑ ↓ the instrument; [ ] its pattern (in ARRANGE, the brush); P the pattern picker; M the instrument on or off, Shift M solo.
+  - Space play / stop, R record, ← → back or forward a bar (Shift: 4), Home to the start, ⌘/Ctrl Z undo the last pass or edit, ⌘/Ctrl S save, O open, E export WAV.
+  - PATTERNS: the drum machines play from the home row (A S D F…, Shift for accent), ← → pick the lane. ARRANGE: ⌘/Ctrl D duplicate A–B, ⌫ delete it, I insert 4 bars. AUTOMATE: L loop, T LATCH / TOUCH.
 - **PATTERNS stage** for writing parts in big, readable type. FOCUS on the transport opens it; RACK on its bar goes back.
   - One instrument fills the window: Bass Line 1 or 2, Drum 08 or Drum 09. A rail down the left has a strip per machine: its ON light, a level meter that shows whether it's sounding (click it to bring that machine up), and the pattern it's playing. A machine that's switched off, muted or outside a solo keeps a grey, ghosted meter of what it would play, so you can see it running along and bring it in on time. It fits any window shape, wide or tall: the step grid takes the extra room, and its cells, lights and type grow with it. Drum machines show every lane at once across the whole panel, with the selected instrument's knobs below. The stage and instrument are remembered.
   - Type bass lines on the computer keyboard: A W S E D F T G Y H U J K play C to C and write the selected step, then the cursor moves on. Shift adds accent, Z / X set the octave, Tab slides the note you just typed into the next one, Backspace writes a rest, the arrow keys move the cursor. The bass line's header spells this out.

@@ -177,6 +177,30 @@ export class Clock {
     return heard > this.pos * TICKS_PER_STEP ? this.player.passStart : heard;
   }
 
+  // LOOP A-B on and off; turning it on with no range set loops four bars from here.
+  toggleLoop() {
+    const { t } = this;
+    const song = this.state.song;
+    t.loop = !t.loop;
+    if (t.loop && song.loopEnd <= song.loopStart) {
+      song.loopStart = Math.max(0, t.bar - 1) * TICKS_PER_BAR;
+      song.loopEnd = song.loopStart + 4 * TICKS_PER_BAR;
+    }
+  }
+
+  // An arrangement edit: an undo point before, and playback picking up the
+  // new events after (or, stopped, every control set as the song has it here).
+  edit(fn) {
+    this.player.checkpoint();
+    fn(this.state.song);
+    this.afterEdit();
+  }
+
+  afterEdit() {
+    if (this.t.playing) this.player.resync(this.pos * TICKS_PER_STEP - 1);
+    else this.player.chase(this.heardTick());
+  }
+
   // Takes back the last recording pass (or the one in progress) and puts every
   // control where the restored song has it now.
   undoPass() {

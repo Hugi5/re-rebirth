@@ -37,6 +37,12 @@ const COPY = {
   brush: 'BRUSH',
   hint: 'DRAG TO PAINT \u00B7 SHIFT-CLICK PICKS A PATTERN \u00B7 THIN LANE: ON / OFF \u00B7 RULER: DRAG A\u2013B, END',
 };
+// The pattern a row paints with: chosen in the picker, else what plays now.
+export const brushOf = (state, id) => state.ui.brush?.[id] ?? state.device(id).bank * 8 + state.device(id).pattern;
+
+// The A-B range in bars, or null.
+export const rangeBars = (song) => (song.loopEnd > song.loopStart ? [song.loopStart / T, song.loopEnd / T] : null);
+
 const patternName = (i) => `${BANKS[Math.floor(i / 8)]}${(i % 8) + 1}`;
 
 export class Arrange {
@@ -49,23 +55,16 @@ export class Arrange {
     return this.state.ui.arrange;
   }
 
-  // Before an edit: undo point. After: playback picks up the new events.
   edit(fn) {
-    const { clock } = this.app;
-    clock.player.checkpoint();
-    fn(this.state.song);
-    this.afterEdit();
+    this.app.clock.edit(fn);
   }
 
   afterEdit() {
-    const { clock } = this.app;
-    if (clock.t.playing) clock.player.resync(clock.pos * 2 - 1);
-    else clock.player.chase(clock.heardTick());
+    this.app.clock.afterEdit();
   }
 
   brush(id) {
-    const { state } = this;
-    return state.ui.brush[id] ?? state.device(id).bank * 8 + state.device(id).pattern;
+    return brushOf(this.state, id);
   }
 
   draw(ctx) {
@@ -95,7 +94,7 @@ export class Arrange {
   drawTools(ctx) {
     const { state, app, w } = this;
     const { song } = state;
-    const range = song.loopEnd > song.loopStart ? [song.loopStart / T, song.loopEnd / T] : null;
+    const range = rangeBars(song);
     let x = PAD;
     const act = (label, fn, key) => {
       const bw = tab(ctx, x, TOOLS, label, false, fn, key);
@@ -111,7 +110,7 @@ export class Arrange {
     act(COPY.ins, () => this.edit((s) => insertBars(s, range ? range[0] : Math.max(0, state.transport.bar - 1), 4)), 'arr.ins');
     x += 6;
     const canUndo = app.clock.player.canUndo();
-    act(COPY.undo, canUndo ? () => (app.clock.undoPass(), this.afterEdit()) : null, 'arr.undo');
+    act(COPY.undo, canUndo ? () => app.clock.undoPass() : null, 'arr.undo');
     let rx = w - PAD;
     rx -= tab(ctx, rx, TOOLS, COPY.fit, false, () => Object.assign(this.view, { from: 0, span: Math.max(songBars(song), MIN_BARS) * T }), 'arr.fit', 'right') + 8;
     const hint = { size: 5.2, weight: 700, align: 'right', color: C.inkMuted, spacing: 0.2 };

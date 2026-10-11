@@ -4,7 +4,7 @@ import { loadDemo } from './demo.js';
 import { addedMessage, closeLibrary, openLibrary, SEARCH_PLACEHOLDER } from './render/library.js';
 import { setLineScale, thinLines } from './render/primitives.js';
 import { Rack } from './render/rack.js';
-import { shownDevices } from './render/focus-view.js';
+
 import { viewClass, viewKey } from './render/views.js';
 import { Midi } from './midi.js';
 import { Clock } from './sequencer/clock.js';
@@ -16,6 +16,7 @@ import { hits } from './ui/hits.js';
 import { canvasInput } from './ui/canvas-input.js';
 import { attachPointer } from './ui/pointer.js';
 import { loadPrefs, savePrefs } from './ui/prefs.js';
+import { runShortcut } from './ui/shortcuts.js';
 import { stepKey } from './ui/step-keys.js';
 
 const canvas = document.getElementById('rack');
@@ -196,6 +197,11 @@ window.addEventListener('keydown', (e) => {
       return;
     }
   }
+  if (e.code === 'Escape' && state.ui.help) {
+    state.ui.help = false;
+    requestRender();
+    return;
+  }
   if (e.code === 'Escape' && state.ui.midiLearn) {
     state.ui.midiLearn = null;
     requestRender();
@@ -223,48 +229,23 @@ window.addEventListener('keydown', (e) => {
     toggleFullscreen();
     return;
   }
-  if (pickerKey(e)) {
+  const handled = () => {
     e.preventDefault();
     requestRender();
     files.autosave();
-    return;
-  }
-  if (stepKey(e, state, engine)) {
-    e.preventDefault();
-    requestRender();
-    files.autosave();
-    return;
-  }
-  if (e.code === 'KeyF' && !e.repeat && !e.metaKey && !e.ctrlKey && !e.altKey) {
-    toggleFullscreen();
-    return;
-  }
-  if (e.code !== 'Space' || e.repeat) return;
-  e.preventDefault();
-  clock.toggle();
-  requestRender();
-});
-
-// Pattern picker open: arrows step through the shown machine's patterns
-// (left/right, across banks) or banks (up/down), from the queued pick if any,
-// so presses while playing keep stepping.
-const PICKER_STEPS = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -8, ArrowDown: 8 };
-function pickerKey(e) {
+    savePrefs(state.ui);
+  };
+  // With a window open only play/stop and the list work.
   const { ui } = state;
-  if (!ui.picker || ui.about || ui.library || ui.automation || ui.export || !(e.code in PICKER_STEPS)) return false;
-  if (e.metaKey || e.ctrlKey || e.altKey) return false;
-  const [id] = shownDevices(state);
-  const dev = state.device(id);
-  // In ARRANGE the picker chooses the row's brush, not what plays.
-  if (ui.stage === 'arrange') {
-    const from = ui.brush?.[id] ?? dev.bank * 8 + dev.pattern;
-    (ui.brush ??= {})[id] = (from + PICKER_STEPS[e.code] + 32) % 32;
-    return true;
+  if (ui.about || ui.library || ui.automation || ui.export) {
+    if (e.code === 'Space' && !e.repeat) {
+      clock.toggle();
+      handled();
+    }
+    return;
   }
-  const from = dev.queued ?? dev.bank * 8 + dev.pattern;
-  state.pickPattern(id, (from + PICKER_STEPS[e.code] + 32) % 32);
-  return true;
-}
+  if (stepKey(e, state, engine) || runShortcut(e, state, app)) handled();
+});
 
 const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 

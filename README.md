@@ -38,10 +38,19 @@ Everything is drawn on a canvas and every sound is synthesized live with the Web
 | Drag a knob up/down, or scroll | Turn it; hold <kbd>Shift</kbd> for fine steps, double-click to reset |
 | Hold REW / FF | Seek, faster the longer you hold |
 | Shift-click a Drum 09 step | Cycle on → accent → flam → off |
+| <kbd>/</kbd> | **Every shortcut that works where you are** |
+| <kbd>1</kbd>–<kbd>5</kbd> | RACK, PATTERNS, ARRANGE, AUTOMATE, MIX |
+| <kbd>↑</kbd> <kbd>↓</kbd> | Previous / next instrument (focus stages) |
+| <kbd>[</kbd> <kbd>]</kbd>, <kbd>P</kbd> | Previous / next pattern, pattern picker |
+| <kbd>←</kbd> <kbd>→</kbd> | Back / forward a bar; in PATTERNS the step cursor or drum lane |
+| <kbd>M</kbd>, <kbd>Shift</kbd> <kbd>M</kbd> | Instrument on/off, solo |
+| <kbd>R</kbd>, <kbd>Home</kbd>, <kbd>⌘/Ctrl</kbd> <kbd>Z</kbd> | Record, to the start, undo a pass or edit |
+| <kbd>⌘/Ctrl</kbd> <kbd>S</kbd> / <kbd>O</kbd> / <kbd>E</kbd> | Save, open, export WAV |
 | <kbd>Esc</kbd> | Close a window |
-| <kbd>F</kbd> | Full screen on/off (outside PATTERNS step entry) |
+| <kbd>F</kbd> | Full screen on/off (outside PATTERNS) |
 | PATTERNS, bass shown: <kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> … <kbd>K</kbd> | Write a note (C to C) on the selected step and move on; <kbd>Shift</kbd> adds accent |
-| PATTERNS: <kbd>Z</kbd> / <kbd>X</kbd>, <kbd>Tab</kbd>, <kbd>⌫</kbd>, <kbd>←</kbd> <kbd>→</kbd> | Octave down/up, slide into the next note, rest, move the cursor |
+| PATTERNS, bass shown: <kbd>Z</kbd> / <kbd>X</kbd>, <kbd>Tab</kbd>, <kbd>⌫</kbd> | Octave down/up, slide into the next note, rest |
+| PATTERNS, drums shown: <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> … <kbd>'</kbd> | Play a lane and select it; <kbd>Shift</kbd> accents |
 
 ## Song compatibility
 

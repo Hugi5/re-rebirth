@@ -45,6 +45,7 @@ export class State {
       brush: {}, // ARRANGE: the pattern each machine's row paints with
       arrange: null, // ARRANGE's visible range { from, span } in ticks
       export: null, // the EXPORT WAV window's choices and progress, or null
+      help: false, // the keyboard shortcuts overlay ("/")
     };
     this.clearSong();
   }
