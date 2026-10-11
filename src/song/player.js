@@ -58,6 +58,23 @@ export class SongPlayer {
     }
   }
 
+  // After the song was edited under playback: point each track's cursor past
+  // `tick` again, without applying anything.
+  resync(tick) {
+    for (const id of TRACK_IDS) {
+      const events = this.song.tracks[id];
+      let i = 0;
+      while (i < events.length && events[i].tick <= tick) i++;
+      this.cursor[id] = i;
+    }
+  }
+
+  // Before an arrangement edit: the song as it is, for UNDO (shared with passes).
+  checkpoint() {
+    this.undoStack.push(snapshotOf(this.song));
+    if (this.undoStack.length > UNDO_DEPTH) this.undoStack.shift();
+  }
+
   // Apply events with tick <= `tick` that haven't been applied yet.
   // Returns the device ids whose pattern changed (their step position resets).
   advance(tick) {

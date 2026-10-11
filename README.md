@@ -25,6 +25,7 @@ Everything is drawn on a canvas and every sound is synthesized live with the Web
 - **MIX stage:** the four channel strips, effects and master, large, with SOLO; automated controls are marked.
 - **Export WAV:** the song, the loop or the patterns, rendered with the same engine.
 - **MIDI:** knobs, faders, keys and pads, set up for an Arturia MiniLab 3, plus MIDI learn for any controller (Chrome, Edge, Firefox).
+- **ARRANGE stage:** the song as a pattern row per machine: paint bars with patterns, switch machines on and off per bar, duplicate, delete or insert bars.
 - **AUTOMATE stage:** set an A–B loop on the song timeline, arm REC, and every knob you touch is recorded, pass after pass. LATCH or TOUCH, and UNDO PASS for takes you don't like.
 - The rack scales to fill the window. It works with a mouse, a trackpad or touch, including iPad and iPhone.
 

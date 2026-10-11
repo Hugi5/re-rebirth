@@ -96,7 +96,7 @@ function syncStageMode({ loaded = false } = {}) {
   if (loaded || modeStage === null || modeStage === 'rack') rackMode = state.transport.mode;
   if (stage === modeStage && !loaded) return;
   modeStage = stage;
-  clock.setMode(stage === 'patterns' ? 'pattern' : stage === 'automate' ? 'song' : rackMode);
+  clock.setMode(stage === 'patterns' ? 'pattern' : stage === 'automate' || stage === 'arrange' ? 'song' : rackMode);
 }
 
 function render() {
@@ -255,6 +255,12 @@ function pickerKey(e) {
   if (e.metaKey || e.ctrlKey || e.altKey) return false;
   const [id] = shownDevices(state);
   const dev = state.device(id);
+  // In ARRANGE the picker chooses the row's brush, not what plays.
+  if (ui.stage === 'arrange') {
+    const from = ui.brush?.[id] ?? dev.bank * 8 + dev.pattern;
+    (ui.brush ??= {})[id] = (from + PICKER_STEPS[e.code] + 32) % 32;
+    return true;
+  }
   const from = dev.queued ?? dev.bank * 8 + dev.pattern;
   state.pickPattern(id, (from + PICKER_STEPS[e.code] + 32) % 32);
   return true;

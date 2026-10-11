@@ -42,6 +42,8 @@ export class State {
       octave: 0,
       recMode: 'latch',
       picker: false,
+      brush: {}, // ARRANGE: the pattern each machine's row paints with
+      arrange: null, // ARRANGE's visible range { from, span } in ticks
       export: null, // the EXPORT WAV window's choices and progress, or null
     };
     this.clearSong();

@@ -6,6 +6,7 @@
 import { BASS_IDS } from '../state.js';
 import { BASS_STACKED_MIN, Bassline } from './devices/bassline.js';
 import { CHANNELS } from '../channels.js';
+import { Arrange } from './devices/arrange.js';
 import { ChannelStrip, STRIP_W } from './devices/channel-strip.js';
 import { DRUM_STACKED_MIN, DrumMachine, R808, R909 } from './devices/drum-machine.js';
 import { EffectsColumn } from './devices/effects.js';
@@ -176,6 +177,23 @@ function drawAt(ctx, d) {
 
 export class PatternsView extends FocusView {
   static stage = 'patterns';
+}
+
+// ARRANGE: the song's pattern rows; the device scale is PATTERNS' own.
+export class ArrangeView extends FocusView {
+  static stage = 'arrange';
+
+  static key() {
+    return 'arrange';
+  }
+
+  static minBody() {
+    return devicesSize(['bass1']);
+  }
+
+  buildBody({ x, y, w, h }) {
+    return [new Arrange(this.state, this.app, x, y, w, h)];
+  }
 }
 
 export class AutomateView extends FocusView {

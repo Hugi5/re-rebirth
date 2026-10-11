@@ -14,6 +14,7 @@ export const STAGE_BAR_MIN_W = 580;
 export const STAGES = [
   ['rack', 'RACK'],
   ['patterns', 'PATTERNS'],
+  ['arrange', 'ARRANGE'],
   ['automate', 'AUTOMATE'],
   ['mix', 'MIX'],
 ];

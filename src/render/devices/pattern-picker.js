@@ -21,7 +21,8 @@ const LOW = -12;
 const HIGH = 24;
 const COPY = {
   title: (id) => `PATTERNS \u00B7 ${NAMES[id]}`,
-  hint: 'CLICK OR \u2190 \u2192 \u2191 \u2193 TO PLAY \u00B7 WHILE PLAYING, THE CHANGE WAITS FOR THE END OF THE PATTERN',
+  playHint: 'CLICK OR \u2190 \u2192 \u2191 \u2193 TO PLAY \u00B7 WHILE PLAYING, THE CHANGE WAITS FOR THE END OF THE PATTERN',
+  brushHint: 'CLICK THE PATTERN TO PAINT WITH',
   close: 'CLOSE',
   empty: 'EMPTY',
 };
@@ -35,6 +36,7 @@ export class PatternPicker {
   draw(ctx) {
     const { state, w, h, id } = this;
     panel(ctx, 0, 0, w, h, C.transport);
+    const hint = state.ui.stage === 'arrange' ? COPY.brushHint : COPY.playHint;
     text(ctx, COPY.title(id), 10, HEADER_H / 2 + 1, { ...LABEL, size: 7.5, weight: 900, align: 'left', color: C.inkLight, spacing: 0.8 });
     const closeW = textWidth(ctx, COPY.close, LABEL) + 14;
     const key = 'picker.close';
@@ -45,25 +47,33 @@ export class PatternPicker {
     const hintX = 10 + titleW + 12;
     const room = w - 8 - closeW - 10 - hintX;
     const hintOpts = { size: 5.5, weight: 700, align: 'left', color: C.inkMuted, spacing: 0.2 };
-    const fit = room / textWidth(ctx, COPY.hint, hintOpts);
-    if (fit > 0.6) text(ctx, COPY.hint, hintX, HEADER_H / 2 + 1, { ...hintOpts, size: hintOpts.size * Math.min(1, fit) });
+    const fit = room / textWidth(ctx, hint, hintOpts);
+    if (fit > 0.6) text(ctx, hint, hintX, HEADER_H / 2 + 1, { ...hintOpts, size: hintOpts.size * Math.min(1, fit) });
 
     const gx = 6 + BANK_W;
     const gy = HEADER_H + 2;
     const cw = (w - gx - 6 - GAP * 7) / 8;
     const ch = (h - gy - 6 - GAP * 3) / 4;
     const dev = state.device(id);
-    const current = dev.bank * 8 + dev.pattern;
+    // In ARRANGE it picks the row's brush (what gets painted), not what plays.
+    const brushMode = state.ui.stage === 'arrange';
+    const brush = state.ui.brush?.[id] ?? dev.bank * 8 + dev.pattern;
+    const current = brushMode ? brush : dev.bank * 8 + dev.pattern;
     const blink = state.transport.step % 4 < 2;
+    const pick = (index) => {
+      if (!brushMode) return state.pickPattern(id, index);
+      (state.ui.brush ??= {})[id] = index;
+      state.ui.picker = false;
+    };
     for (let b = 0; b < 4; b++) {
       const y = gy + b * (ch + GAP);
       text(ctx, BANKS[b], 6 + BANK_W / 2, y + ch / 2 + 0.5, { size: 9, weight: 900, color: C.inkMuted });
       for (let i = 0; i < 8; i++) {
         const index = b * 8 + i;
         const x = gx + i * (cw + GAP);
-        const lit = index === current || (dev.queued === index && blink);
-        this.drawCell(ctx, x, y, cw, ch, index, lit, index === current);
-        hits.rect(ctx, x, y, cw, ch, click(() => state.pickPattern(id, index), `picker.${index}`));
+        const lit = index === current || (!brushMode && dev.queued === index && blink);
+        this.drawCell(ctx, x, y, cw, ch, index, lit, !brushMode && index === current);
+        hits.rect(ctx, x, y, cw, ch, click(() => pick(index), `picker.${index}`));
       }
     }
   }
