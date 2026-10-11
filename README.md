@@ -1,12 +1,60 @@
 # Re-Rebirth
 
-A tribute to [ReBirth RB-338](https://en.wikipedia.org/wiki/ReBirth_RB-338) in the browser: two acid bass lines, two drum machines, a mixer with effects and VU meters, and a pattern/song sequencer. It opens original ReBirth 2.0 songs (`.rbs`) and plays them back.
+A tribute to [ReBirth RB-338](https://en.wikipedia.org/wiki/ReBirth_RB-338) in the browser: two acid bass lines, two drum machines, a mixer with effects and VU meters, and a pattern/song sequencer. It opens original ReBirth 2.0 songs (`.rbs`) and plays them back, and it's built for making new ones: focused stages for writing, arranging, automating and mixing, MIDI controllers, and WAV export.
 
 Everything is drawn on a canvas and every sound is synthesized live with the Web Audio API: no samples.
 
 ![Re-Rebirth playing TGV's KiloMix '98](docs/screenshot.png)
 
-**Try it:** [rb.varyform.info](https://rb.varyform.info). Click the logo and choose **Load TGV's KiloMix '98** for an example song, then press <kbd>Space</kbd>.
+**Try it:** [rb.varyform.info](https://rb.varyform.info). Click the logo and choose **Load TGV's KiloMix '98** for an example song, then press <kbd>Space</kbd>. Press <kbd>2</kbd> to start writing patterns, and <kbd>/</kbd> any time for the keys that work where you are.
+
+## Making music
+
+The rack shows everything at once, the way ReBirth did. For working on a song there are four **stages**, each showing only what it needs, as large as the window allows: PATTERNS, ARRANGE, AUTOMATE and MIX (keys <kbd>2</kbd>–<kbd>5</kbd>; <kbd>1</kbd> is the rack). They share a slim transport bar and a **rail** down the left with a strip per machine: its ON light, live meters (ghosted grey while it's muted, so you can see it running along), its volume, and the pattern it's playing. Click a strip to bring that machine up.
+
+The stages fit any window shape, wide or tall: controls and type grow into the room, while lines stay one pixel thin.
+
+### PATTERNS: write the parts
+
+![PATTERNS: Bass Line 1 big, the rail on the left](docs/screenshots/patterns.png)
+
+One instrument fills the window. Type bass lines on the computer keyboard (<kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> … <kbd>K</kbd> are C to C, the cursor moves on by itself) or play them on a MIDI keyboard. Drum machines show every lane at once, and play from the home row or MIDI pads. PATTERNS always loops the patterns you pick, so what you choose stays.
+
+| Drum 09, all lanes | The pattern picker |
+|---|---|
+| ![PATTERNS: Drum 09 with every lane](docs/screenshots/patterns-drums.png) | ![All 32 patterns of Bass Line 2 as piano rolls](docs/screenshots/pattern-picker.png) |
+
+Click a machine's pattern on the rail (or press <kbd>P</kbd>) for the **pattern picker**: all 32 of its patterns at once, bass lines as little piano rolls and drum patterns as lane grids. Click one, or step with the arrow keys, to hear combinations: A1 on one bass line against A4 on the other.
+
+### ARRANGE: build the song
+
+![ARRANGE: a pattern row per machine, bars across](docs/screenshots/arrange.png)
+
+A row per machine, bars across. Paint bars with a row's brush pattern, switch a machine off for some bars on the thin lane under its row, and mark bars A–B on the ruler to duplicate, delete or insert them; knob automation moves along. Everything can be undone.
+
+### AUTOMATE: ride the knobs
+
+![AUTOMATE: the loop timeline over the instrument](docs/screenshots/automate.png)
+
+Set an A–B loop on the song timeline, arm REC and play: the loop goes round, and every knob you touch is recorded, several at once from a MIDI controller. LATCH holds your last value to the end of the pass, TOUCH lets go when you do; either way the old automation carries on after. Each pass is a take, and UNDO PASS takes back the ones you don't like. ReBirth never had this.
+
+### MIX: balance and finish
+
+![MIX: four channel strips, effects and master](docs/screenshots/mix.png)
+
+The four channel strips with long faders and SOLO, the effects and the master with its VU needles, all large. Controls the song automates carry an orange dot. **EXPORT** on the bar renders the song, the A–B loop or the patterns to a WAV with the same engine, faster than real time (on iPad, through the share sheet).
+
+### MIDI controllers
+
+![SET UP MY CONTROLLER: the picture lights the control to touch](docs/screenshots/midi-setup.png)
+
+Plug in a MIDI controller (Chrome, Edge or Firefox) and click **MIDI** on the bar. **SET UP MY CONTROLLER** asks for each control in turn, with a picture lighting the one to touch; half a minute later every knob, slider, pad and button does its job, whatever numbers it sends. The knobs follow the instrument on screen (cutoff, resonance, env mod, decay… on a bass line, the selected drum's knobs on a drum machine), sliders are the volumes, the big knob steps patterns, and green badges on screen show which hardware control drives what. MIDI LEARN binds anything else. Laid out for an Arturia MiniLab 3, but any controller works.
+
+### Keyboard
+
+![The / overlay: the shortcuts that work in PATTERNS with a bass line up](docs/screenshots/keys.png)
+
+Everything has a key, and <kbd>/</kbd> lists the ones that work where you are, in type you can read from across the desk.
 
 ## Features
 
@@ -21,12 +69,8 @@ Everything is drawn on a canvas and every sound is synthesized live with the Web
 - **Song mode:** play a song's arrangement and automation, loop a range, or arm REC and record pattern changes and knob moves.
 - **Automation window:** every recorded control of the song as a graph over time. Pan, zoom, and click the ruler to jump.
 - **Songs:** opens ReBirth 2.0 / 2.0.1 `.rbs` files and saves its own `.json`. Work is autosaved in the browser.
-- **PATTERNS stage** (FOCUS on the transport): the one instrument you're writing (Bass Line 1 or 2, Drum 08 or 09), as big as the window allows. Type bass lines on the computer keyboard.
-- **MIX stage:** the four channel strips, effects and master, large, with SOLO; automated controls are marked.
-- **Export WAV:** the song, the loop or the patterns, rendered with the same engine.
-- **MIDI:** knobs, faders, keys and pads, set up for an Arturia MiniLab 3, plus MIDI learn for any controller (Chrome, Edge, Firefox).
-- **ARRANGE stage:** the song as a pattern row per machine: paint bars with patterns, switch machines on and off per bar, duplicate, delete or insert bars.
-- **AUTOMATE stage:** set an A–B loop on the song timeline, arm REC, and every knob you touch is recorded, pass after pass. LATCH or TOUCH, and UNDO PASS for takes you don't like.
+- **Song library:** drop folders of songs; search, sort, rate and share them.
+- **Stages, MIDI, WAV export:** see [Making music](#making-music).
 - The rack scales to fill the window. It works with a mouse, a trackpad or touch, including iPad and iPhone.
 
 ### Keys and gestures
@@ -38,7 +82,7 @@ Everything is drawn on a canvas and every sound is synthesized live with the Web
 | Drag a knob up/down, or scroll | Turn it; hold <kbd>Shift</kbd> for fine steps, double-click to reset |
 | Hold REW / FF | Seek, faster the longer you hold |
 | Shift-click a Drum 09 step | Cycle on → accent → flam → off |
-| <kbd>/</kbd> | **Every shortcut that works where you are** |
+| <kbd>/</kbd> | **Every shortcut that works where you are** (the full list) |
 | <kbd>1</kbd>–<kbd>5</kbd> | RACK, PATTERNS, ARRANGE, AUTOMATE, MIX |
 | <kbd>↑</kbd> <kbd>↓</kbd> | Previous / next instrument (focus stages) |
 | <kbd>[</kbd> <kbd>]</kbd>, <kbd>P</kbd> | Previous / next pattern, pattern picker |
@@ -77,11 +121,12 @@ The app is plain JavaScript with no framework, built with Vite:
 | Path | |
 |---|---|
 | `src/audio/` | Web Audio engine: bass voice, drum voices, effects, mixer |
-| `src/render/` | Canvas rack: devices, controls, About and automation windows |
+| `src/render/` | Canvas views: the rack, the focus stages, devices, controls, windows |
 | `src/sequencer/` | Lookahead clock and pattern scheduling |
 | `src/song/` | Song model, playback/recording, `.rbs` reader, `.json` sessions |
-| `src/ui/` | Pointer handling and hit regions |
-| `tools/` | Offline rendering and analysis scripts used for calibration; `icons.mjs` renders the home-screen PNGs from `public/icon.svg`; `screenshot.mjs` takes this README's screenshot |
+| `src/ui/` | Pointer handling, hit regions, keyboard shortcuts |
+| `src/midi.js` | Web MIDI: controller layouts, setup walkthrough, learn |
+| `tools/` | Offline rendering and analysis scripts used for calibration; `icons.mjs` renders the home-screen PNGs from `public/icon.svg`; `screenshot.mjs` takes this README's top screenshot and `screenshots.mjs` the stage ones in `docs/screenshots/` |
 
 ### Calibration tools
 

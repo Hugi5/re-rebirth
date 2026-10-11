@@ -24,7 +24,8 @@ import { stepKey } from './ui/step-keys.js';
 // session stays and the library lives in IndexedDB. Runs before anything
 // reads them.
 const KEEP = new Set(['re-rebirth.session']);
-if (new URLSearchParams(location.search).has('reset')) {
+const params = new URLSearchParams(location.search);
+if (params.has('reset')) {
   for (const key of Object.keys(localStorage)) if (key.startsWith('re-rebirth.') && !KEEP.has(key)) localStorage.removeItem(key);
   history.replaceState(null, '', location.pathname + location.hash);
 }
@@ -73,6 +74,8 @@ app.midi = new Midi(state, engine, {
 let view = new Rack(state, app);
 let viewScale = 1;
 let chromeScale = 1;
+// ?tools: hand state and app to scripts driving the page (tools/screenshots.mjs).
+if (params.has('tools')) window.reRebirth = { state, app };
 let modeStage = null; // the stage the play mode was last set for
 let rackMode = 'pattern'; // the rack's own PATTERN / SONG choice, kept while away
 
