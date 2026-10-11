@@ -6,6 +6,7 @@
 import { BASS_IDS } from '../state.js';
 import { BASS_STACKED_MIN, Bassline } from './devices/bassline.js';
 import { DRUM_STACKED_MIN, DrumMachine, R808, R909 } from './devices/drum-machine.js';
+import { PatternPicker } from './devices/pattern-picker.js';
 import { Rail, RAIL_STRIPS, RAIL_W } from './devices/rail.js';
 import { keysHint, STAGE_BAR_H, STAGE_BAR_MIN_W, StageBar } from './devices/stage-bar.js';
 import { Timeline, TIMELINE_H } from './devices/timeline.js';
@@ -115,7 +116,13 @@ class FocusView {
     for (const d of this.chrome) drawAt(ctx, d);
     restoreLineScale(lines);
     ctx.restore();
-    for (const d of this.devices) drawAt(ctx, d);
+    // The pattern picker takes the instrument's place (see rail.js).
+    if (state.ui.picker) {
+      const [d] = this.devices;
+      drawAt(ctx, new PatternPicker(state, this.app, d.x, d.y, d.w, this.height - d.y - MARGIN, d.id));
+    } else {
+      for (const d of this.devices) drawAt(ctx, d);
+    }
     // Notices (the rack shows them in its song display), at chrome size.
     const notice = state.notice && performance.now() < state.notice.until ? state.notice.text : null;
     if (notice) {

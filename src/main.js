@@ -193,6 +193,11 @@ window.addEventListener('keydown', (e) => {
     requestRender();
     return;
   }
+  if (e.code === 'Escape' && state.ui.picker && !(state.ui.about || state.ui.library || state.ui.automation)) {
+    state.ui.picker = false;
+    requestRender();
+    return;
+  }
   if (e.code === 'Escape' && (state.ui.about || state.ui.library || state.ui.automation)) {
     if (state.ui.about) state.ui.about = false;
     else if (state.ui.library) closeLibrary(state);

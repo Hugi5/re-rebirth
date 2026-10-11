@@ -1,7 +1,7 @@
 // The focus stages' instrument rail: one strip per machine, top to bottom, so
 // you see what's sounding and pick what's shown big. Each strip: an ON LED,
-// a level bar beside the machine's name (click either to show the machine),
-// and the playing pattern.
+// a level bar beside the machine's name (click to show the machine), and the
+// playing pattern (click to open the pattern picker for that machine).
 import { hits } from '../../ui/hits.js';
 import { click, toggle } from '../../ui/handlers.js';
 import { lcd, led, panel, rgba, rrect, sevenSeg, sevenSegWidth, text, vgrad } from '../primitives.js';
@@ -72,6 +72,18 @@ export class Rail {
     const ly = h - LCD_H - 3;
     lcd(ctx, 5, ly, w - 10, LCD_H);
     sevenSeg(ctx, label, 5 + (w - 10 - sevenSegWidth(label, 6)) / 2, ly + 2.5, 6, LCD_H - 5);
+    if (shown && state.ui.picker) {
+      rrect(ctx, 4, ly - 1, w - 8, LCD_H + 2, 2.5);
+      ctx.strokeStyle = C.ledYellow;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    // Again on the open machine's readout closes the picker.
+    const pick = () => {
+      state.ui.picker = !(state.ui.picker && shown);
+      state.ui.show = id;
+    };
+    hits.rect(ctx, 0, ly - 2, w, LCD_H + 5, click(pick, `rail.${id}.pattern`));
   }
 
   // One meter channel: a continuous bar, green to yellow to red.

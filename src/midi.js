@@ -18,6 +18,7 @@ const COPY = {
   forgot: (param) => `${param.replace(/\./g, ' ')}: BACK TO DEFAULT`,
   connected: (names) => `MIDI: ${names.join(', ') || 'NO DEVICE YET'}`,
   denied: 'MIDI ACCESS WAS NOT ALLOWED',
+  monitor: (ch, cc, v) => `CH ${ch + 1} \u00B7 CC ${cc} \u00B7 ${v}`,
 };
 // MiniLab 3 factory program: encoders 1-8 and faders 1-4, channel 1.
 const KNOB_CCS = [74, 71, 76, 77, 93, 18, 19, 16];
@@ -35,6 +36,21 @@ const KITS = { r808: R808, r909: R909 };
 const ACCENT_VELOCITY = 100;
 const MIDDLE_C = 48; // C3: the 303's middle octave
 const GRAB = 2 / 127; // soft takeover: how close an absolute control must come
+
+// One relative step, whichever of the usual encodings the controller uses:
+// binary offset (64 + n / 64 - n), two's complement (n / 128 - n) or sign bit
+// (n / 64 + n). Ups look alike (1..n or 65..n) but downs don't: offset goes
+// below 64 (63..), two's complement to the top (127..), sign bit to 65...
+// The one overlap, 65..80 (offset up or sign-bit down), is told apart by what
+// else the control has sent.
+function relativeDelta(c, v) {
+  if (v >= 1 && v <= 15) c.sawLow = true;
+  if (v >= 49 && v <= 63) c.sawMid = true;
+  if (v < 48) return v;
+  if (v <= 64) return v - 64;
+  if (v <= 80) return c.sawLow && !c.sawMid ? 64 - v : v - 64;
+  return v - 128;
+}
 
 export class Midi {
   // onChange: after any state change from MIDI; notify(text): a short message.
@@ -125,6 +141,8 @@ export class Midi {
   cc(channel, cc, value) {
     const key = `${channel}:${cc}`;
     const learn = this.state.ui.midiLearn;
+    // While learning, show what arrives: tells which CC a control sends and how.
+    if (learn) this.notify(COPY.monitor(channel, cc, value));
     if (learn?.param) {
       for (const [k, v] of this.bindings) if (v === learn.param) this.bindings.delete(k);
       this.bindings.set(key, learn.param);
@@ -162,15 +180,14 @@ export class Midi {
   turn(key, param, value) {
     const { state } = this;
     let c = this.controls.get(key);
-    if (!c) this.controls.set(key, (c = { mode: null, last: null, param, grabbed: false }));
+    if (!c) this.controls.set(key, (c = { relative: false, last: null, param, grabbed: false, sawLow: false, sawMid: false }));
     if (c.param !== param) Object.assign(c, { param, grabbed: false });
     // (Not at 0 or 127: an absolute knob turned past its end may repeat those.)
-    if (!c.mode && value === c.last && value > 0 && value < 127) c.mode = Math.abs(value - 64) < 16 ? 'offset' : 'twos';
+    if (!c.relative && value === c.last && value > 0 && value < 127) c.relative = true;
     const prev = c.last;
     c.last = value;
-    if (c.mode) {
-      const delta = c.mode === 'offset' ? value - 64 : value < 64 ? value : value - 128;
-      state.set(param, state.get(param) + delta / 127);
+    if (c.relative) {
+      state.set(param, state.get(param) + relativeDelta(c, value) / 127);
       return;
     }
     const target = value / 127;

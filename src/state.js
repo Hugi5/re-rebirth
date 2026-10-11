@@ -28,7 +28,8 @@ export class State {
     // masterView: the master module's meters, 'vu' needles or 'spectrum'.
     // stage: the view ('rack' or a focus stage); show: the device the focus
     // stages show; octave: computer-keyboard step entry;
-    // recMode: how a recording pass writes touched knobs, 'latch' or 'touch'.
+    // recMode: how a recording pass writes touched knobs, 'latch' or 'touch';
+    // picker: the focus stages show the pattern picker instead of the instrument.
     this.ui = {
       about: false,
       automation: null,
@@ -40,6 +41,7 @@ export class State {
 
       octave: 0,
       recMode: 'latch',
+      picker: false,
     };
     this.clearSong();
   }
