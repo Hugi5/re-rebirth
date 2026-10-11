@@ -3,7 +3,7 @@
 import { canPaste, clearPattern, copyPattern, pastePattern, randomizePattern, setLength } from '../song/pattern-ops.js';
 import { hits } from '../ui/hits.js';
 import { click, knobDrag } from '../ui/handlers.js';
-import { button, circle, icon, knob, lcd, led, rgba, sevenSeg, sevenSegWidth, text } from './primitives.js';
+import { button, circle, icon, knob, lcd, led, rgba, rrect, sevenSeg, sevenSegWidth, text, textWidth } from './primitives.js';
 import { C } from './theme.js';
 
 export class Knob {
@@ -16,6 +16,9 @@ export class Knob {
     if (learn) drawLearnRing(ctx, this.x, this.y, this.r + 6, learn.param === this.param ? C.ledYellow : learn.mapped.has(this.param) ? C.ledGreen : null);
     knob(ctx, this.x, this.y, this.r, state.get(this.param), this.style, { ticks: this.ticks });
     hits.circle(ctx, this.x, this.y, this.r + 4, knobDrag(state, this.param));
+    const hw = state.ui.midiLabels?.get(this.param);
+    if (hw) midiBadge(ctx, this.x + this.r * 0.8, this.y - this.r * 0.8, hw);
+    state.ui.drawnParams?.add(this.param);
     if (!this.label) return;
     const ly = this.labelPos === 'above' ? this.y - this.r - 10 : this.y + this.r + 7.5;
     text(ctx, this.label, this.x, ly, { size: this.labelSize, color: this.labelColor });
@@ -31,6 +34,16 @@ export function drawLearnRing(ctx, x, y, r, color) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 1.2;
   ctx.stroke();
+}
+
+// Which hardware control drives this one: "3" (knob 3), "F2", "MW", "CC20".
+export function midiBadge(ctx, x, y, label) {
+  const opts = { size: 5.5, weight: 900, color: '#062b06' };
+  const w = Math.max(9, textWidth(ctx, label, opts) + 4);
+  rrect(ctx, x - w / 2, y - 4.5, w, 9, 4.5);
+  ctx.fillStyle = C.ledGreen;
+  ctx.fill();
+  text(ctx, label, x, y + 0.5, opts);
 }
 
 const BANKS = 'ABCD';

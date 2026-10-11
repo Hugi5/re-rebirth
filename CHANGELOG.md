@@ -16,7 +16,10 @@
   - UNDO PASS takes back the pass being recorded, or the one before; up to 32 passes.
   - The timeline's lanes show the automation of the devices on screen, zoomed to the loop; knobs touched in this pass are marked and listed first.
 - **MIDI controllers** (Chrome, Edge and Firefox; Safari has no Web MIDI). MIDI on the PATTERNS / AUTOMATE bar connects; its light shows the connection, and it reconnects by itself next time.
-  - Set up for an Arturia MiniLab 3 in its factory program: the eight knobs play the instrument on screen (bass line: cutoff, resonance, env mod, decay, accent, tuning, volume, waveform; drum machine: the selected instrument's knobs), the four faders the channel levels.
+  - Set up for an Arturia MiniLab 3 in its factory program, following the instrument on screen:
+    - Knobs 1–6 play it: on a bass line cutoff, resonance, env mod, decay, accent, tuning; on a drum machine the selected instrument's knobs (hit a pad to select one), its accent level and pan. Knob 7 is its delay send, knob 8 the distortion amount.
+    - Faders 1–4: the four channel levels. Touch strip or mod wheel: the bass line's cutoff, or the delay feedback on drums.
+    - Each knob a hardware control drives wears its number (green badge: 1–8, F1–F4, MW, or the CC of a learned control). Moving something that isn't on screen, like a level in PATTERNS, shows its name and value at the bottom.
   - Keys write notes on the selected step in PATTERNS (hit hard for accent; the 25 keys cover the 303's two octaves), and play the bass line elsewhere when stopped. Pads play the drum machine on screen (Drum 09 while a bass line is shown), hit hard for accent, even while the song plays.
   - Endless and ordinary knobs both work: endless ones in any of the usual relative modes (offset around 64, two's complement, sign bit), ordinary ones taking over only once they reach the knob's value, so nothing jumps.
   - While MIDI learn is on, every control you move shows its channel, CC number and value at the bottom.

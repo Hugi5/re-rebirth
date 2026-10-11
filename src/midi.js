@@ -19,13 +19,19 @@ const COPY = {
   connected: (names) => `MIDI: ${names.join(', ') || 'NO DEVICE YET'}`,
   denied: 'MIDI ACCESS WAS NOT ALLOWED',
   monitor: (ch, cc, v) => `CH ${ch + 1} \u00B7 CC ${cc} \u00B7 ${v}`,
+  moved: (param, v) => `${paramName(param)} \u00B7 ${Math.round(v * 127)}`,
 };
-// MiniLab 3 factory program: encoders 1-8 and faders 1-4, channel 1.
+// MiniLab 3 factory program: encoders 1-8 and faders 1-4, channel 1; the
+// touch strip (or any keyboard's mod wheel) sends CC 1.
 const KNOB_CCS = [74, 71, 76, 77, 93, 18, 19, 16];
 const FADER_CCS = [82, 83, 85, 17];
+const MOD_CC = 1;
 const PAD_CHANNEL = 9; // 10 in MIDI terms
 const PAD_NOTE = 36; // pad 1; bank B continues at 44
-const BASS_KNOBS = ['cutoff', 'resonance', 'envmod', 'decay', 'accent', 'tuning', 'volume', 'waveform'];
+// What the knobs do, by the instrument on screen. The first six play the
+// instrument; 7 and 8 are the same everywhere: its delay send, distortion.
+const BASS_KNOBS = ['cutoff', 'resonance', 'envmod', 'decay', 'accent', 'tuning'];
+const SHARED_KNOBS = [(id) => `mixer.${id}.delay`, () => 'fx.dist.amount'];
 const CHANNEL_LEVELS = ['bass1', 'bass2', 'r808', 'r909'].map((id) => `mixer.${id}.level`);
 // Most played first, so the first pad bank covers a beat.
 const PAD_LANES = {
@@ -36,6 +42,14 @@ const KITS = { r808: R808, r909: R909 };
 const ACCENT_VELOCITY = 100;
 const MIDDLE_C = 48; // C3: the 303's middle octave
 const GRAB = 2 / 127; // soft takeover: how close an absolute control must come
+
+// "mixer.bass1.delay" -> "BASS 1 DELAY SEND", "fx.dist.amount" -> "DISTORTION AMOUNT".
+const NAMES = { bass1: 'BASS 1', bass2: 'BASS 2', r808: 'DRUM 08', r909: 'DRUM 09', delay: 'DELAY', dist: 'DISTORTION' };
+function paramName(param) {
+  const parts = param.split('.').filter((p) => p !== 'mixer' && p !== 'fx');
+  if (param.startsWith('mixer.') && parts[1] === 'delay') parts[1] = 'delay send';
+  return parts.map((p) => NAMES[p] ?? p.replace(/([a-z])([A-Z])/g, '$1 $2')).join(' ').toUpperCase();
+}
 
 // One relative step, whichever of the usual encodings the controller uses:
 // binary offset (64 + n / 64 - n), two's complement (n / 128 - n) or sign bit
@@ -153,7 +167,12 @@ export class Midi {
       return;
     }
     const param = this.bindings.get(key) ?? this.defaultParam(channel, cc);
-    if (param) this.turn(key, param, value);
+    if (!param) return;
+    const before = this.state.get(param);
+    this.turn(key, param, value);
+    const after = this.state.get(param);
+    // Off screen (delay send, distortion, levels in the focus stages): say what moved.
+    if (after !== before && !learn && !this.state.ui.drawnParams?.has(param)) this.notify(COPY.moved(param, after));
   }
 
   // What the factory layout controls: knobs follow the instrument on screen.
@@ -161,16 +180,39 @@ export class Midi {
     if (channel !== 0) return null;
     const fader = FADER_CCS.indexOf(cc);
     if (fader >= 0) return CHANNEL_LEVELS[fader];
+    const [id] = shownDevices(this.state);
+    const bass = BASS_IDS.includes(id);
+    // Mod wheel / touch strip: the classic acid move on a bass line, the delay
+    // feedback on drums.
+    if (cc === MOD_CC) return bass ? `${id}.cutoff` : 'fx.delay.feedback';
     const knob = KNOB_CCS.indexOf(cc);
     if (knob < 0) return null;
-    const [id] = shownDevices(this.state);
-    if (BASS_IDS.includes(id)) return `${id}.${BASS_KNOBS[knob]}`;
-    // Drum machines: the knobs of the selected instrument.
+    if (knob >= 6) return SHARED_KNOBS[knob - 6](id);
+    if (bass) return `${id}.${BASS_KNOBS[knob]}`;
+    // Drum machines: knobs 1-4 the selected instrument (as many as it has),
+    // 5 the accent level, 6 the channel's pan.
+    if (knob === 4) return `${id}.ac.level`;
+    if (knob === 5) return `mixer.${id}.pan`;
     const cfg = KITS[id];
     const selected = this.state.drums[id].selected;
     const group = cfg.groups.find((g) => g.tracks.includes(selected)) ?? cfg.groups[0];
     const k = group.knobs[knob];
     return k ? `${id}.${group.id}.${k[0]}` : null;
+  }
+
+  // Which hardware control drives which parameter right now, for the badges
+  // on screen: knobs 1-8, faders F1-F4, the mod wheel, learned CCs.
+  labels() {
+    const out = new Map();
+    const put = (key, label, fallback) => {
+      const param = this.bindings.get(key) ?? fallback;
+      if (param && !out.has(param)) out.set(param, label);
+    };
+    KNOB_CCS.forEach((cc, i) => put(`0:${cc}`, String(i + 1), this.defaultParam(0, cc)));
+    FADER_CCS.forEach((cc, i) => put(`0:${cc}`, `F${i + 1}`, this.defaultParam(0, cc)));
+    put(`0:${MOD_CC}`, 'MW', this.defaultParam(0, MOD_CC));
+    for (const [key, param] of this.bindings) if (!out.has(param)) out.set(param, `CC${key.split(':')[1]}`);
+    return out;
   }
 
   // Endless encoders send relative steps, plain knobs and faders absolute

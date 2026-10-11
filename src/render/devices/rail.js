@@ -4,6 +4,7 @@
 // playing pattern (click to open the pattern picker for that machine).
 import { hits } from '../../ui/hits.js';
 import { click, toggle } from '../../ui/handlers.js';
+import { midiBadge } from '../controls.js';
 import { lcd, led, panel, rgba, rrect, sevenSeg, sevenSegWidth, text, vgrad } from '../primitives.js';
 import { C } from '../theme.js';
 
@@ -63,6 +64,8 @@ export class Rail {
     this.drawLevel(ctx, 20, top, 6, mh, l);
     this.drawLevel(ctx, 29, top, 6, mh, r);
     hits.rect(ctx, 0, top, w, mh, click(() => (state.ui.show = id), `rail.${id}`));
+    const hw = state.ui.midiLabels?.get(`mixer.${id}.level`);
+    if (hw) midiBadge(ctx, w - 9, LED_H / 2 + 2, hw);
 
     // Pattern playing (or queued, blinking).
     const dev = state.device(id);

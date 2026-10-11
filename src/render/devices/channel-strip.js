@@ -4,7 +4,7 @@
 import { COMP_TARGETS, PCF_TARGETS } from '../../channels.js';
 import { hits } from '../../ui/hits.js';
 import { click, faderDrag } from '../../ui/handlers.js';
-import { Knob } from '../controls.js';
+import { Knob, midiBadge } from '../controls.js';
 import { button, fader, led, ledBar, panel, shade, text, vgrad } from '../primitives.js';
 import { C, KNOB } from '../theme.js';
 
@@ -49,6 +49,9 @@ export function drawMeter(ctx, x, y, h, level, w = 6) {
 export function drawFaderWithMeters(ctx, state, x, y, h, param, levels) {
   fader(ctx, x, y, 16, h, state.get(param));
   hits.rect(ctx, x, y, 16, h, faderDrag(state, param, h - FADER_CAP));
+  state.ui.drawnParams?.add(param);
+  const hw = state.ui.midiLabels?.get(param);
+  if (hw) midiBadge(ctx, x + 8, y - 6, hw);
   const [l, r] = levels ?? [0, 0];
   drawMeter(ctx, x + 21, y + 2, h - 4, l, 5);
   drawMeter(ctx, x + 28, y + 2, h - 4, r, 5);

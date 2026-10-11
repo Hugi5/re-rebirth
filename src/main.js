@@ -110,6 +110,10 @@ function render() {
   ctx.setTransform(s, 0, 0, s, 0, 0);
   setLineScale(ctx);
   hits.clear();
+  // Hardware-control badges, while a MIDI device is connected.
+  state.ui.midiLabels = state.ui.midi === 'on' ? app.midi.labels() : null;
+  // Knobs on screen this frame: MIDI says what it moved when it isn't one of them.
+  state.ui.drawnParams = new Set();
   // Chrome gets its own exact scale too (view scale x k would differ in the
   // last bits per stage, and with it the anti-aliasing).
   view.draw(ctx, { chromeScale: (view.k === view.chromeScale ? chromeScale : viewScale * view.k) * dpr });
