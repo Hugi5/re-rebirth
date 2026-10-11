@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 — 2026-10-11
 
 ### New
 - **Keyboard shortcuts for everything**, and **/** to list the ones that work where you are (it changes with the stage, the instrument and the picker):
@@ -27,21 +27,15 @@
 - **MIX stage** for balancing the song: the four channel strips side by side with long faders, each with a SOLO button, and the effects and master column beside them, all as large as the window allows. The rail stays on the left. The master's VU needles sit side by side when there's more width than height, so the dials stay round instead of squashed.
 - Knobs and faders the song automates have a small orange dot, here and in the rack: playback moves them, so to change them for good, record over them in AUTOMATE.
 - **EXPORT WAV** on the PATTERNS / AUTOMATE / MIX bar: renders the whole song, the A–B loop, or the current patterns for 4 to 32 bars, faster than real time with the same sound engine, and gives you a 48 kHz 16-bit stereo WAV (on iPad and iPhone through the share sheet, so you can save it to Files or AirDrop it). It shows the length first and the peak level after, and warns if the master clipped.
-- **MIDI controllers** (Chrome, Edge and Firefox; Safari has no Web MIDI). MIDI on the PATTERNS / AUTOMATE bar connects; its light shows the connection, and it reconnects by itself next time.
-  - Set up for an Arturia MiniLab 3 in its factory program, following the instrument on screen:
-    - Knobs 1–6 play it: on a bass line cutoff, resonance, env mod, decay, accent, tuning; on a drum machine the selected instrument's knobs (hit a pad to select one), its accent level and pan. Knob 7 is its delay send, knob 8 the distortion amount.
-    - Faders 1–4: the four channel levels. Touch strip or mod wheel: the bass line's cutoff, or the delay feedback on drums.
-    - Each knob a hardware control drives wears its number (green badge: 1–8, F1–F4, MW, or the CC of a learned control). Moving something that isn't on screen, like a level in PATTERNS, shows its name and value at the bottom.
+- **MIDI controllers** (Chrome, Edge and Firefox; Safari has no Web MIDI). MIDI on the bar connects (its light shows the connection; it reconnects by itself next time) and opens the MIDI window.
+  - **SET UP MY CONTROLLER** asks for each control in turn in big type (turn knob 1, … move slider 4, the big knob, its click, Shift, the mod strip, pad 1, Shift + pads 4–7), with a picture of the controller lighting the one to touch. About half a minute, and every control does its job whatever numbers it sends; skip what your controller doesn't have. Until then a guess at an Arturia MiniLab 3's factory program stands in.
+  - The controls follow the instrument on screen. Knobs 1–6 play it: on a bass line cutoff, resonance, env mod, decay, accent, tuning; on a drum machine the selected instrument's knobs (hit a pad to select one), its accent level and pan. Knob 7 is its delay send, knob 8 the distortion amount. Sliders 1–4: the four channel volumes. Mod strip: the bass line's cutoff, or the delay feedback on drums. The big knob steps through patterns (with Shift, instruments) and its click opens the pattern picker; Shift + pads 4–7 are loop, stop, play and record, as printed on a MiniLab 3.
+  - Each on-screen control a hardware control drives wears its number (green badge: 1–8, F1–F4, MW, or the CC of a learned control). Moving something that isn't on screen shows its name and value at the bottom.
   - Keys write notes on the selected step in PATTERNS (hit hard for accent; the 25 keys cover the 303's two octaves), and play the bass line elsewhere when stopped. Pads play the drum machine on screen (Drum 09 while a bass line is shown), hit hard for accent, even while the song plays.
-  - Endless and ordinary knobs both work: endless ones in any of the usual relative modes (offset around 64, two's complement, sign bit), ordinary ones taking over only once they reach the knob's value, so nothing jumps.
-  - While MIDI learn is on, every control you move shows its channel, CC number and value at the bottom.
-  - **SET UP MY CONTROLLER:** MIDI on the bar now opens a MIDI window. Its walkthrough asks for each control in turn in big type (turn knob 1, … move slider 4, the big knob, its click, Shift, the mod strip, pad 1, Shift + pads 4–7), with a picture of the controller lighting the one to touch. About half a minute, and every control does its job whatever numbers it sends. Skip what your controller doesn't have.
-  - The big knob steps through patterns (with Shift, instruments) and its click opens the pattern picker; Shift + pads 4–7 are loop, stop, play and record, as printed on a MiniLab 3.
-  - The window also starts MIDI LEARN and has RESET (back to the guessed layout, nothing learned). Opening the app with `?reset` after the address clears all its settings kept in the browser (stage, MIDI); your songs, library and autosaved work stay.
-  - Whether a knob sends values or endless steps is worked out from what it sends (until then it's treated as an ordinary knob, which never jumps) and remembered between visits.
-  - A knob learned on an instrument's control follows the instrument on screen: learn a knob on Bass Line 1's cutoff and it rides Bass Line 2's cutoff when that's up; the same for the drum machines.
   - Knob moves are recorded like mouse moves, so in AUTOMATE you can ride several knobs at once.
-  - MIDI learn: once connected, click MIDI (it reads LEARN), click a knob or fader on screen, and move a control. Double-click forgets a binding; Escape or another click leaves learn mode. Bindings are kept in the browser.
+  - Endless and ordinary knobs both work, worked out from what they send and remembered: endless ones in any of the usual relative modes (offset around 64, two's complement, sign bit), ordinary ones taking over only once they reach the knob's value, so nothing jumps.
+  - **MIDI LEARN** (from the MIDI window): click a knob or fader on screen, then move a control; while learning, every control you move shows its channel, CC and value. A knob learned on an instrument's control follows the instrument on screen (learn on Bass Line 1's cutoff, and it rides Bass Line 2's when that's up). Double-click forgets a binding; Escape or a click on LEARN ends learning.
+  - RESET in the MIDI window goes back to the guessed layout with nothing learned. Opening the app with `?reset` after the address clears all its settings kept in the browser (stage, MIDI); your songs, library and autosaved work stay.
 - **Share songs** from the library with the system share sheet (AirDrop to an iPad, Mail, Files...): the share icon on a row sends that song, SHARE in the toolbar sends every song listed (just the search results while searching). Browsers that can't share files download them instead.
 - Press F to switch full screen on and off. In Chrome and Edge, Escape then closes About, the library or automation first and leaves full screen only from the rack (hold Escape to leave straight away); other browsers leave full screen on Escape as usual.
 
