@@ -5,7 +5,10 @@
 // left, and in AUTOMATE the loop timeline above the instrument.
 import { BASS_IDS } from '../state.js';
 import { BASS_STACKED_MIN, Bassline } from './devices/bassline.js';
+import { CHANNELS } from '../channels.js';
+import { ChannelStrip, STRIP_W } from './devices/channel-strip.js';
 import { DRUM_STACKED_MIN, DrumMachine, R808, R909 } from './devices/drum-machine.js';
+import { EffectsColumn } from './devices/effects.js';
 import { PatternPicker } from './devices/pattern-picker.js';
 import { Rail, RAIL_STRIPS, RAIL_W } from './devices/rail.js';
 import { keysHint, STAGE_BAR_H, STAGE_BAR_MIN_W, StageBar } from './devices/stage-bar.js';
@@ -39,6 +42,11 @@ class FocusView {
     return `${this.stage}:${shownDevices(state).join('+')}`;
   }
 
+  // The body's minimum size, margins included (the instrument shown, here).
+  static minBody(state) {
+    return devicesSize(shownDevices(state));
+  }
+
   static chromeH() {
     return BAR_BOTTOM + (this.timeline ? GAP + TIMELINE_H : 0);
   }
@@ -50,7 +58,7 @@ class FocusView {
   static size(state) {
     const bass = devicesSize(['bass1']);
     return {
-      min: devicesSize(shownDevices(state)),
+      min: this.minBody(state),
       chrome: this.chromeH(),
       chromeLeft: CHROME_LEFT,
       chromeW: STAGE_BAR_MIN_W + MARGIN * 2,
@@ -81,15 +89,23 @@ class FocusView {
     this.chrome = [new StageBar(state, app, MARGIN, MARGIN, W - MARGIN * 2), new Rail(state, app, MARGIN, BAR_BOTTOM + GAP, RAIL_W, H - BAR_BOTTOM - GAP - MARGIN)];
     if (V.timeline) this.chrome.push(new Timeline(state, app, rightX, BAR_BOTTOM + GAP, W - rightX - MARGIN, TIMELINE_H, ids));
 
-    // Extra height goes to the devices in proportion to their minimum heights.
+    // The body: everything right of the rail and under the chrome.
     const x = CHROME_LEFT * k + MARGIN;
-    const w = width - x - MARGIN;
+    const y = V.chromeH() * k + GAP;
+    this.body = { x, y, w: width - x - MARGIN, h: height - y - MARGIN };
+    this.devices = this.buildBody(this.body);
+  }
+
+  // The instrument(s) shown, stacked; extra height in proportion to their
+  // minimum heights.
+  buildBody({ x, y, w, h: bodyH }) {
+    const { state, app } = this;
+    const V = this.constructor;
+    const ids = shownDevices(state);
     const mins = ids.map((id) => minSize(id).h);
-    const chromeBottom = V.chromeH() * k;
-    const room = height - chromeBottom - MARGIN - GAP * ids.length;
+    const room = bodyH - GAP * (ids.length - 1);
     const total = mins.reduce((a, b) => a + b, 0);
-    let y = chromeBottom + GAP;
-    this.devices = ids.map((id, i) => {
+    return ids.map((id, i) => {
       const h = (room * mins[i]) / total;
       const d = DRUMS[id]
         ? new DrumMachine(state, app, x, y, w, h, DRUMS[id], { stacked: true })
@@ -118,8 +134,8 @@ class FocusView {
     ctx.restore();
     // The pattern picker takes the instrument's place (see rail.js).
     if (state.ui.picker) {
-      const [d] = this.devices;
-      drawAt(ctx, new PatternPicker(state, this.app, d.x, d.y, d.w, this.height - d.y - MARGIN, d.id));
+      const { x, y, w, h } = this.body;
+      drawAt(ctx, new PatternPicker(state, this.app, x, y, w, h, shownDevices(state)[0]));
     } else {
       for (const d of this.devices) drawAt(ctx, d);
     }
@@ -165,4 +181,40 @@ export class PatternsView extends FocusView {
 export class AutomateView extends FocusView {
   static stage = 'automate';
   static timeline = true;
+}
+
+// MIX & MASTER: the four channel strips side by side, long faders, and the
+// effects and master column beside them, as large as the window allows. The
+// rail stays for ON switches and meters.
+const MIX_STRIPS_W = STRIP_W * 4 + GAP * 3;
+const MIX_FX_W = 300;
+const MIX_MIN = { w: MIX_STRIPS_W + GAP + MIX_FX_W, h: 480 };
+
+export class MixView extends FocusView {
+  static stage = 'mix';
+
+  static key() {
+    return 'mix';
+  }
+
+  static minBody() {
+    return { w: MIX_MIN.w + MARGIN * 2, h: MIX_MIN.h + MARGIN };
+  }
+
+  // Strips keep their width (their controls don't spread); the effects column
+  // takes the extra width, and everything the extra height. The effects get
+  // the column's rows like the rack's instrument rows: master, pattern filter,
+  // delay over distortion (a double row), compressor.
+  buildBody({ x, y, w, h }) {
+    const { state } = this;
+    const devices = CHANNELS.map(([id, label], index) => new ChannelStrip(state, x + index * (STRIP_W + GAP), y, STRIP_W, h, { id, label, index, solo: true }));
+    const fx = x + MIX_STRIPS_W + GAP;
+    const row = (h - GAP * 3) / 5;
+    const bands = [row, row, row * 2 + GAP, row].reduce((out, bh) => {
+      const by = out.length ? out.at(-1).y + out.at(-1).h + GAP : 0;
+      return [...out, { y: by, h: bh }];
+    }, []);
+    devices.push(new EffectsColumn(state, fx, y, x + w - fx, h, bands, GAP));
+    return devices;
+  }
 }

@@ -15,6 +15,7 @@ export const STAGES = [
   ['rack', 'RACK'],
   ['patterns', 'PATTERNS'],
   ['automate', 'AUTOMATE'],
+  ['mix', 'MIX'],
 ];
 const COPY = {
   export: 'EXPORT',

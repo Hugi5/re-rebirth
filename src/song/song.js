@@ -48,6 +48,19 @@ export function eraseRange(events, from, to, match) {
   }
 }
 
+// Every key the song automates (pattern changes excluded), cached per song
+// until its event count changes (recording, undo, another song).
+const automatedCache = new WeakMap();
+export function automatedKeys(song) {
+  const stamp = TRACK_IDS.map((id) => song.tracks[id].length).join(',');
+  const hit = automatedCache.get(song);
+  if (hit?.stamp === stamp) return hit.keys;
+  const keys = new Set();
+  for (const id of TRACK_IDS) for (const e of song.tracks[id]) if (e.key !== 'pattern') keys.add(e.key);
+  automatedCache.set(song, { stamp, keys });
+  return keys;
+}
+
 export function songBars(song) {
   return Math.ceil(song.length / TICKS_PER_BAR);
 }

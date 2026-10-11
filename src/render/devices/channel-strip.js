@@ -4,7 +4,7 @@
 import { COMP_TARGETS, PCF_TARGETS } from '../../channels.js';
 import { hits } from '../../ui/hits.js';
 import { click, faderDrag } from '../../ui/handlers.js';
-import { Knob, midiBadge } from '../controls.js';
+import { automatedMark, Knob, midiBadge } from '../controls.js';
 import { button, fader, led, ledBar, panel, shade, text, vgrad } from '../primitives.js';
 import { C, KNOB } from '../theme.js';
 
@@ -52,6 +52,7 @@ export function drawFaderWithMeters(ctx, state, x, y, h, param, levels) {
   state.ui.drawnParams?.add(param);
   const hw = state.ui.midiLabels?.get(param);
   if (hw) midiBadge(ctx, x + 8, y - 6, hw);
+  if (state.ui.automated?.has(param)) automatedMark(ctx, x + 8, y + h + 4);
   const [l, r] = levels ?? [0, 0];
   drawMeter(ctx, x + 21, y + 2, h - 4, l, 5);
   drawMeter(ctx, x + 28, y + 2, h - 4, r, 5);
@@ -60,9 +61,10 @@ export function drawFaderWithMeters(ctx, state, x, y, h, param, levels) {
 }
 
 export class ChannelStrip {
-  // index: position in CHANNELS (routing targets are index + 1).
-  constructor(state, x, y, w, h, { id, label, index }) {
-    Object.assign(this, { state, x, y, w, h, id, label, index });
+  // index: position in CHANNELS (routing targets are index + 1). solo: also a
+  // SOLO button (the MIX stage; listening only, never saved in a song).
+  constructor(state, x, y, w, h, { id, label, index, solo = false }) {
+    Object.assign(this, { state, x, y, w, h, id, label, index, solo });
     const small = { ticks: 7, labelSize: 5.5, r: 10 };
     const param = (k) => `mixer.${id}.${k}`;
     state.define(param('pan'), 0.5);
@@ -107,5 +109,9 @@ export class ChannelStrip {
     drawButton(ctx, BUTTON_X, FADER_Y, BUTTON_W, 'DIST', state.on01(dist), C.dist, () => state.toggle(dist));
     drawButton(ctx, BUTTON_X, FADER_Y + 18, BUTTON_W, 'PCF', pcfHere, C.pcf, () => state.setChoice('fx.pcf.target', pcfHere ? 0 : i + 1, nPcf));
     drawButton(ctx, BUTTON_X, FADER_Y + 36, BUTTON_W, 'COMP', compHere(state, i + 1), C.comp, () => toggleComp(state, i + 1));
+    if (this.solo) {
+      const solo = `mixer.${id}.solo`;
+      drawButton(ctx, BUTTON_X, FADER_Y + 62, BUTTON_W, 'SOLO', state.on01(solo), C.ledYellow, () => state.toggle(solo));
+    }
   }
 }

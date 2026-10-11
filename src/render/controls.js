@@ -18,6 +18,7 @@ export class Knob {
     hits.circle(ctx, this.x, this.y, this.r + 4, knobDrag(state, this.param));
     const hw = state.ui.midiLabels?.get(this.param);
     if (hw) midiBadge(ctx, this.x + this.r * 0.8, this.y - this.r * 0.8, hw);
+    if (state.ui.automated?.has(this.param)) automatedMark(ctx, this.x - this.r * 0.85, this.y - this.r * 0.85);
     state.ui.drawnParams?.add(this.param);
     if (!this.label) return;
     const ly = this.labelPos === 'above' ? this.y - this.r - 10 : this.y + this.r + 7.5;
@@ -44,6 +45,17 @@ export function midiBadge(ctx, x, y, label) {
   ctx.fillStyle = C.ledGreen;
   ctx.fill();
   text(ctx, label, x, y + 0.5, opts);
+}
+
+// The song automates this control: playback moves it, so a hand-set value
+// lasts only until the next recorded move (record over it to change it).
+export function automatedMark(ctx, x, y) {
+  circle(ctx, x, y, 2.4);
+  ctx.fillStyle = C.ledOrange;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
 }
 
 const BANKS = 'ABCD';

@@ -4,10 +4,12 @@ import { loadDemo } from './demo.js';
 import { addedMessage, closeLibrary, openLibrary, SEARCH_PLACEHOLDER } from './render/library.js';
 import { setLineScale, thinLines } from './render/primitives.js';
 import { Rack } from './render/rack.js';
+import { shownDevices } from './render/focus-view.js';
 import { viewClass, viewKey } from './render/views.js';
 import { Midi } from './midi.js';
 import { Clock } from './sequencer/clock.js';
 import { Files } from './song/files.js';
+import { automatedKeys } from './song/song.js';
 import { collectDropped, Library } from './song/library.js';
 import { State } from './state.js';
 import { hits } from './ui/hits.js';
@@ -112,6 +114,8 @@ function render() {
   hits.clear();
   // Hardware-control badges, while a MIDI device is connected.
   state.ui.midiLabels = state.ui.midi === 'on' ? app.midi.labels() : null;
+  // Controls the song automates get a mark (cached until the song changes).
+  state.ui.automated = automatedKeys(state.song);
   // Knobs on screen this frame: MIDI says what it moved when it isn't one of them.
   state.ui.drawnParams = new Set();
   // Chrome gets its own exact scale too (view scale x k would differ in the
@@ -219,6 +223,12 @@ window.addEventListener('keydown', (e) => {
     toggleFullscreen();
     return;
   }
+  if (pickerKey(e)) {
+    e.preventDefault();
+    requestRender();
+    files.autosave();
+    return;
+  }
   if (stepKey(e, state, engine)) {
     e.preventDefault();
     requestRender();
@@ -234,6 +244,21 @@ window.addEventListener('keydown', (e) => {
   clock.toggle();
   requestRender();
 });
+
+// Pattern picker open: arrows step through the shown machine's patterns
+// (left/right, across banks) or banks (up/down), from the queued pick if any,
+// so presses while playing keep stepping.
+const PICKER_STEPS = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -8, ArrowDown: 8 };
+function pickerKey(e) {
+  const { ui } = state;
+  if (!ui.picker || ui.about || ui.library || ui.automation || ui.export || !(e.code in PICKER_STEPS)) return false;
+  if (e.metaKey || e.ctrlKey || e.altKey) return false;
+  const [id] = shownDevices(state);
+  const dev = state.device(id);
+  const from = dev.queued ?? dev.bank * 8 + dev.pattern;
+  state.pickPattern(id, (from + PICKER_STEPS[e.code] + 32) % 32);
+  return true;
+}
 
 const isFullscreen = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 
