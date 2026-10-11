@@ -129,10 +129,20 @@ export class EffectsColumn {
     if (state.ui.masterView === 'spectrum') {
       spectrumDisplay(ctx, vx, top, vw, total, state.meters.spectrum);
     } else {
-      const vh = (total - 6) / 2;
       const [l, r] = state.meters.vu ?? [0, 0];
-      vuMeter(ctx, vx, top, vw, vh, l, 'L');
-      vuMeter(ctx, vx, top + vh + 6, vw, vh, r, 'R');
+      // Stacked or side by side, whichever gives each dial the larger arc (a
+      // VU face is about twice as wide as tall): the rack's master is tall,
+      // MIX's wide.
+      const arc = (w, h) => Math.min(w * 0.62, h * 1.25);
+      const stackedH = (total - 6) / 2;
+      const besideW = (vw - 6) / 2;
+      if (arc(besideW, total) > arc(vw, stackedH)) {
+        vuMeter(ctx, vx, top, besideW, total, l, 'L');
+        vuMeter(ctx, vx + besideW + 6, top, besideW, total, r, 'R');
+      } else {
+        vuMeter(ctx, vx, top, vw, stackedH, l, 'L');
+        vuMeter(ctx, vx, top + stackedH + 6, vw, stackedH, r, 'R');
+      }
     }
     const flip = () => (state.ui.masterView = state.ui.masterView === 'spectrum' ? 'vu' : 'spectrum');
     hits.rect(ctx, vx, top, vw, total, click(flip));

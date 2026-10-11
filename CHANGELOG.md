@@ -20,7 +20,7 @@
   - LATCH (the default) holds a knob's last value until the end of the pass; TOUCH lets it go a moment after you stop moving it. Either way the knob's old automation carries on after.
   - UNDO PASS takes back the pass being recorded, or the one before; up to 32 passes.
   - The timeline's lanes show the automation of the devices on screen, zoomed to the loop; knobs touched in this pass are marked and listed first.
-- **MIX stage** for balancing the song: the four channel strips side by side with long faders, each with a SOLO button, and the effects and master column beside them, all as large as the window allows. The rail stays on the left.
+- **MIX stage** for balancing the song: the four channel strips side by side with long faders, each with a SOLO button, and the effects and master column beside them, all as large as the window allows. The rail stays on the left. The master's VU needles sit side by side when there's more width than height, so the dials stay round instead of squashed.
 - Knobs and faders the song automates have a small orange dot, here and in the rack: playback moves them, so to change them for good, record over them in AUTOMATE.
 - **EXPORT WAV** on the PATTERNS / AUTOMATE / MIX bar: renders the whole song, the A–B loop, or the current patterns for 4 to 32 bars, faster than real time with the same sound engine, and gives you a 48 kHz 16-bit stereo WAV (on iPad and iPhone through the share sheet, so you can save it to Files or AirDrop it). It shows the length first and the peak level after, and warns if the master clipped.
 - **MIDI controllers** (Chrome, Edge and Firefox; Safari has no Web MIDI). MIDI on the PATTERNS / AUTOMATE bar connects; its light shows the connection, and it reconnects by itself next time.
