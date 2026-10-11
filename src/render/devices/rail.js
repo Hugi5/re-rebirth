@@ -4,6 +4,7 @@
 // playing pattern (click to open the pattern picker for that machine).
 import { hits } from '../../ui/hits.js';
 import { click, toggle } from '../../ui/handlers.js';
+import { audibleChannel } from '../../channels.js';
 import { midiBadge } from '../controls.js';
 import { lcd, led, panel, rgba, rrect, sevenSeg, sevenSegWidth, text, vgrad } from '../primitives.js';
 import { C } from '../theme.js';
@@ -19,6 +20,8 @@ const GAP = 4;
 const LED_H = 14;
 const LCD_H = 14;
 const BANKS = 'ABCD';
+const LIVE = [C.ledGreen, C.ledGreen, C.ledYellow, C.ledRed];
+const GHOST = [rgba(C.inkMuted, 0.35), rgba(C.inkMuted, 0.35), rgba(C.inkMuted, 0.5), rgba(C.inkLight, 0.5)];
 
 export class Rail {
   constructor(state, app, x, y, w, h) {
@@ -60,9 +63,13 @@ export class Rail {
     ctx.rotate(-Math.PI / 2);
     text(ctx, name, 0, 0.5, { size: Math.min(6.5, mh / 5), weight: 800, color: shown ? C.ledYellow : on ? C.inkLight : C.inkMuted, spacing: 0.4 });
     ctx.restore();
-    const [l, r] = state.meters[id] ?? [0, 0];
-    this.drawLevel(ctx, 20, top, 6, mh, l);
-    this.drawLevel(ctx, 29, top, 6, mh, r);
+    // Not heard (off, muted, or another channel soloed): the level it would
+    // have, ghosted, so you still see it playing along.
+    const heard = audibleChannel(state, id);
+    const [l, r] = (heard ? state.meters[id] : state.meters.ghost?.[id]) ?? [0, 0];
+    const colors = heard ? LIVE : GHOST;
+    this.drawLevel(ctx, 20, top, 6, mh, l, colors);
+    this.drawLevel(ctx, 29, top, 6, mh, r, colors);
     hits.rect(ctx, 0, top, w, mh, click(() => (state.ui.show = id), `rail.${id}`));
     const hw = state.ui.midiLabels?.get(`mixer.${id}.level`);
     if (hw) midiBadge(ctx, w - 9, LED_H / 2 + 2, hw);
@@ -89,8 +96,8 @@ export class Rail {
     hits.rect(ctx, 0, ly - 2, w, LCD_H + 5, click(pick, `rail.${id}.pattern`));
   }
 
-  // One meter channel: a continuous bar, green to yellow to red.
-  drawLevel(ctx, x, y, w, h, level) {
+  // One meter channel: a continuous bar, green to yellow to red (or ghosted).
+  drawLevel(ctx, x, y, w, h, level, colors) {
     rrect(ctx, x, y, w, h, 1.5);
     ctx.fillStyle = '#060607';
     ctx.fill();
@@ -99,9 +106,9 @@ export class Rail {
     ctx.save();
     rrect(ctx, x, y, w, h, 1.5);
     ctx.clip();
-    ctx.fillStyle = vgrad(ctx, y + h, y, [C.ledGreen, C.ledGreen, C.ledYellow, C.ledRed]);
+    ctx.fillStyle = vgrad(ctx, y + h, y, colors);
     ctx.fillRect(x, y + h - lh, w, lh);
-    ctx.fillStyle = rgba('#ffffff', 0.18);
+    ctx.fillStyle = rgba('#ffffff', colors === GHOST ? 0.06 : 0.18);
     ctx.fillRect(x, y + h - lh, w * 0.35, lh);
     ctx.restore();
   }

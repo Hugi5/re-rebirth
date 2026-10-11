@@ -6,7 +6,7 @@
 //
 // Knob values are pulled from state once per frame (`sync`) and applied with
 // short smoothing, so the UI never has to know about audio.
-import { CHANNELS, COMP_TARGETS, PCF_TARGETS } from '../channels.js';
+import { audibleChannel, CHANNELS, COMP_TARGETS, PCF_TARGETS } from '../channels.js';
 import { BASS_IDS, DRUM_IDS, HIT } from '../state.js';
 import { BassVoice } from './bass-voice.js';
 import { KITS, playHit } from './drums.js';
@@ -39,6 +39,7 @@ const AC_DEPTH = { r808: 0.8, r909: 6 };
 //  CHANNEL_TRIM_DB: after the effects, before pan and fader; a plain volume offset.
 const INPUT_GAIN = { bass1: 1, bass2: 1, r808: 0.55, r909: 0.55 };
 export const CHANNEL_TRIM_DB = { bass1: 0, bass2: 0, r808: 0, r909: 0 };
+
 
 // Channel faders: linear in dB, 0.367 dB per step of 127, unity at the top
 // (measured in a ReBirth export: 11.7 dB per 32 steps, 32 dB from 40 to 127).
@@ -161,8 +162,11 @@ export class AudioEngine {
       const inserts = new InsertChain(ctx, input, post);
       post.connect(pan).connect(fader).connect(mute).connect(this.masterBus);
       const meter = this.stereoMeter(mute);
+      // Before the mute: what the channel would sound like, for the ghosted
+      // meters of muted / switched-off machines.
+      const ghost = this.stereoMeter(fader);
       mute.connect(send).connect(this.delay.in);
-      this.channels[id] = { label, input, inserts, pan, fader, mute, send, meter };
+      this.channels[id] = { label, input, inserts, pan, fader, mute, send, meter, ghost };
     }
     // Effect activity meters: delay echoes, and each chain's distortion output.
     this.delayMeter = this.analyser();
@@ -307,13 +311,13 @@ export class AudioEngine {
 
     const anySolo = CHANNELS.some(([id]) => state.on01(`mixer.${id}.solo`));
     for (const [id, ch] of Object.entries(this.channels)) {
+      ch.audible = audibleChannel(state, id, anySolo);
       // Measured against ReBirth: its pan law is a little gentler than equal-power at full width.
       set(ch.pan.pan, panPos(g(`mixer.${id}.pan`)));
       set(ch.fader.gain, faderGain(g(`mixer.${id}.level`)));
       // Measured: send 64 echoes 5.1 dB below send 127, close to linear amplitude.
       set(ch.send.gain, g(`mixer.${id}.delay`));
-      const audible = state.on01(`${id}.on`) && !state.on01(`mixer.${id}.mute`) && (!anySolo || state.on01(`mixer.${id}.solo`));
-      set(ch.mute.gain, audible ? 1 : 0, 0.005);
+      set(ch.mute.gain, ch.audible ? 1 : 0, 0.005);
     }
     set(this.masterFader.gain, masterGain(g('mixer.master.level')));
     set(this.volume.gain, g('master.volume') ** 2 * 0.8);
@@ -393,19 +397,16 @@ export class AudioEngine {
     this.at = time;
     this.sync();
     this.at = null;
+    // Switched-off machines still play, silenced by their channel's mute stage
+    // (see sync), so their ghost meters show what they would sound like.
     for (const id of BASS_IDS) {
       const pattern = state.pattern(id);
       const pos = positions[id];
       const t = time + this.swing(pattern, pos, stepDur);
-      if (!state.on01(`${id}.on`)) {
-        this.bass[id].release(t);
-        continue;
-      }
       const next = pattern.steps[(pos + 1) % pattern.length];
       this.bass[id].step(pattern.steps[pos], next, t, stepDur, this.bassParams(id));
     }
     for (const id of DRUM_IDS) {
-      if (!state.on01(`${id}.on`)) continue;
       const pattern = state.pattern(id);
       const pos = positions[id];
       this.playDrums(id, pattern, pos, time + this.swing(pattern, pos, stepDur));
@@ -511,7 +512,11 @@ export class AudioEngine {
       meter.levels = meter.sides.map((a, i) => read(a, meter.levels[i]));
       return meter.levels;
     };
-    for (const [id, ch] of Object.entries(this.channels)) this.state.meters[id] = readStereo(ch.meter);
+    const ghost = (this.state.meters.ghost ??= {});
+    for (const [id, ch] of Object.entries(this.channels)) {
+      this.state.meters[id] = readStereo(ch.meter);
+      ghost[id] = readStereo(ch.ghost);
+    }
     this.state.meters.master = readStereo(this.masterMeter);
     if (this.updateVu()) changed = true;
     if (this.updateSpectrum()) changed = true;
