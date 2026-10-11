@@ -1,11 +1,11 @@
 // The focus stages' instrument rail: one strip per machine, top to bottom, so
 // you see what's sounding and pick what's shown big. Each strip: an ON LED,
-// a level bar beside the machine's name (click to show the machine), and the
-// playing pattern (click to open the pattern picker for that machine).
+// meters beside the machine's name (click to show the machine), its volume
+// fader, and the playing pattern (click: that machine's pattern picker).
 import { hits } from '../../ui/hits.js';
-import { click, toggle } from '../../ui/handlers.js';
+import { click, faderDrag, toggle } from '../../ui/handlers.js';
 import { audibleChannel } from '../../channels.js';
-import { midiBadge } from '../controls.js';
+import { automatedMark, midiBadge } from '../controls.js';
 import { lcd, led, panel, rgba, rrect, sevenSeg, sevenSegWidth, text, vgrad } from '../primitives.js';
 import { C } from '../theme.js';
 
@@ -20,6 +20,8 @@ const GAP = 4;
 const LED_H = 14;
 const LCD_H = 14;
 const BANKS = 'ABCD';
+const VOL_X = 28; // level fader bar, right of the meters
+const VOL_W = 11;
 const LIVE = [C.ledGreen, C.ledGreen, C.ledYellow, C.ledRed];
 const GHOST = [rgba(C.inkMuted, 0.35), rgba(C.inkMuted, 0.35), rgba(C.inkMuted, 0.5), rgba(C.inkLight, 0.5)];
 
@@ -59,7 +61,7 @@ export class Rail {
     const bottom = h - LCD_H - 5;
     const mh = bottom - top;
     ctx.save();
-    ctx.translate(11, top + mh / 2);
+    ctx.translate(8.5, top + mh / 2);
     ctx.rotate(-Math.PI / 2);
     text(ctx, name, 0, 0.5, { size: Math.min(6.5, mh / 5), weight: 800, color: shown ? C.ledYellow : on ? C.inkLight : C.inkMuted, spacing: 0.4 });
     ctx.restore();
@@ -68,11 +70,10 @@ export class Rail {
     const heard = audibleChannel(state, id);
     const [l, r] = (heard ? state.meters[id] : state.meters.ghost?.[id]) ?? [0, 0];
     const colors = heard ? LIVE : GHOST;
-    this.drawLevel(ctx, 20, top, 6, mh, l, colors);
-    this.drawLevel(ctx, 29, top, 6, mh, r, colors);
-    hits.rect(ctx, 0, top, w, mh, click(() => (state.ui.show = id), `rail.${id}`));
-    const hw = state.ui.midiLabels?.get(`mixer.${id}.level`);
-    if (hw) midiBadge(ctx, w - 9, LED_H / 2 + 2, hw);
+    this.drawLevel(ctx, 14.5, top, 4, mh, l, colors);
+    this.drawLevel(ctx, 20, top, 4, mh, r, colors);
+    hits.rect(ctx, 0, top, VOL_X - 2, mh, click(() => (state.ui.show = id), `rail.${id}`));
+    this.drawVolume(ctx, `mixer.${id}.level`, top, mh);
 
     // Pattern playing (or queued, blinking).
     const dev = state.device(id);
@@ -94,6 +95,36 @@ export class Rail {
       state.ui.show = id;
     };
     hits.rect(ctx, 0, ly - 2, w, LCD_H + 5, click(pick, `rail.${id}.pattern`));
+  }
+
+  // The channel's level fader, as a bar: drag it, scroll it, double-click to
+  // reset; MIDI learn picks it like any fader (a MiniLab slider by default).
+  drawVolume(ctx, param, top, h) {
+    const { state } = this;
+    const v = state.get(param);
+    const learn = state.ui.midiLearn;
+    rrect(ctx, VOL_X, top, VOL_W, h, 2);
+    ctx.fillStyle = '#060607';
+    ctx.fill();
+    if (learn) {
+      const color = learn.param === param ? C.ledYellow : learn.mapped.has(param) ? C.ledGreen : null;
+      if (color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+    }
+    const fh = (h - 4) * v;
+    ctx.fillStyle = rgba(C.mixer, 0.35);
+    ctx.fillRect(VOL_X + 2, top + h - 2 - fh, VOL_W - 4, fh);
+    // The cap: where the fader sits.
+    ctx.fillStyle = C.inkLight;
+    ctx.fillRect(VOL_X + 1, top + h - 2 - fh - 1.25, VOL_W - 2, 2.5);
+    hits.rect(ctx, VOL_X - 2, top, VOL_W + 4, h, faderDrag(state, param, h - 4));
+    state.ui.drawnParams?.add(param);
+    const hw = state.ui.midiLabels?.get(param);
+    if (hw) midiBadge(ctx, VOL_X + VOL_W / 2, top - 5, hw);
+    if (state.ui.automated?.has(param)) automatedMark(ctx, VOL_X + VOL_W / 2, top + h + 3);
   }
 
   // One meter channel: a continuous bar, green to yellow to red (or ghosted).

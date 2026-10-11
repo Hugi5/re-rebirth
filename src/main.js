@@ -19,6 +19,16 @@ import { loadPrefs, savePrefs } from './ui/prefs.js';
 import { runShortcut } from './ui/shortcuts.js';
 import { stepKey } from './ui/step-keys.js';
 
+// ?reset: forget every setting kept in the browser (stage, MIDI bindings and
+// what was learned about the controls), keeping the songs: the autosaved
+// session stays and the library lives in IndexedDB. Runs before anything
+// reads them.
+const KEEP = new Set(['re-rebirth.session']);
+if (new URLSearchParams(location.search).has('reset')) {
+  for (const key of Object.keys(localStorage)) if (key.startsWith('re-rebirth.') && !KEEP.has(key)) localStorage.removeItem(key);
+  history.replaceState(null, '', location.pathname + location.hash);
+}
+
 const canvas = document.getElementById('rack');
 const ctx = canvas.getContext('2d');
 // Strokes count in line units: at most one CSS pixel each, at any scale.
@@ -51,6 +61,7 @@ const files = new Files(state, {
 const app = { clock, engine, files, library, notify, toggleFullscreen, redraw: () => requestRender() };
 // Hardware moves are edits like pointer ones: redraw and autosave.
 app.midi = new Midi(state, engine, {
+  clock,
   onChange: () => {
     requestRender();
     files.autosave();
@@ -202,6 +213,11 @@ window.addEventListener('keydown', (e) => {
     requestRender();
     return;
   }
+  if (e.code === 'Escape' && state.ui.midiWindow) {
+    state.ui.midiWindow = null;
+    requestRender();
+    return;
+  }
   if (e.code === 'Escape' && state.ui.midiLearn) {
     state.ui.midiLearn = null;
     requestRender();
@@ -237,7 +253,7 @@ window.addEventListener('keydown', (e) => {
   };
   // With a window open only play/stop and the list work.
   const { ui } = state;
-  if (ui.about || ui.library || ui.automation || ui.export) {
+  if (ui.about || ui.library || ui.automation || ui.export || ui.midiWindow) {
     if (e.code === 'Space' && !e.repeat) {
       clock.toggle();
       handled();

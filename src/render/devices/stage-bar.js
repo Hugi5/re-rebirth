@@ -50,8 +50,9 @@ export class StageBar {
     tab(ctx, rx, ROW, COPY.export, false, () => openExport(state), 'stage.export', 'right');
   }
 
-  // Connects MIDI, then toggles MIDI learn (lit, reading LEARN). The LED shows
-  // the connection. Not drawn where the browser has no Web MIDI.
+  // Connects MIDI, then opens the MIDI window (set up, learn, reset); while
+  // learning it reads LEARN, and a click ends it. The LED shows the
+  // connection. Not drawn where the browser has no Web MIDI.
   drawMidi(ctx, rx) {
     const { state, app } = this;
     if (state.ui.midi === 'unavailable') return -3;

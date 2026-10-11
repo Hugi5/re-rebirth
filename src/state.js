@@ -46,6 +46,7 @@ export class State {
       arrange: null, // ARRANGE's visible range { from, span } in ticks
       export: null, // the EXPORT WAV window's choices and progress, or null
       help: false, // the keyboard shortcuts overlay ("/")
+      midiWindow: null, // the MIDI window: { mode: 'menu' | 'setup' | 'done', ... }
     };
     this.clearSong();
   }

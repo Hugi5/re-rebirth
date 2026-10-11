@@ -38,7 +38,7 @@ export function stepPattern(state, d) {
   state.pickPattern(id, (from + d + 32) % 32);
 }
 
-function stepInstrument(state, d) {
+export function stepInstrument(state, d) {
   const ids = RAIL_STRIPS.map(([id]) => id);
   state.ui.show = ids[(ids.indexOf(shown(state)) + d + ids.length) % ids.length];
 }
