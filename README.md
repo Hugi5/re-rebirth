@@ -126,7 +126,15 @@ The app is plain JavaScript with no framework, built with Vite:
 | `src/song/` | Song model, playback/recording, `.rbs` reader, `.json` sessions |
 | `src/ui/` | Pointer handling, hit regions, keyboard shortcuts |
 | `src/midi.js` | Web MIDI: controller layouts, setup walkthrough, learn |
-| `tools/` | Offline rendering and analysis scripts used for calibration; `icons.mjs` renders the home-screen PNGs from `public/icon.svg`; `screenshot.mjs` takes this README's top screenshot and `screenshots.mjs` the stage ones in `docs/screenshots/` |
+| `tools/` | Offline rendering and analysis scripts used for calibration; `icons.mjs` renders the home-screen PNGs from `public/icon.svg`; `screenshot.mjs` takes this README's top screenshot and `screenshots.mjs` the stage ones in `docs/screenshots/`; `video.mjs` makes a 1080p video of a song playing, views switching |
+
+### Song videos
+
+`tools/video.mjs` makes an MP4 of a song playing in the app, cycling through the rack and the stages: the sound rendered offline with the real engine, the picture recorded from the app playing live in headless Chrome, aligned on bar 1. It runs in real time and needs ffmpeg:
+
+```sh
+node tools/video.mjs "song.rbs" [out.mp4] [--seconds 40] [--size 1920x1080] [--keep]
+```
 
 ### Calibration tools
 
