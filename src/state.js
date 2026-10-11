@@ -42,6 +42,7 @@ export class State {
       octave: 0,
       recMode: 'latch',
       picker: false,
+      export: null, // the EXPORT WAV window's choices and progress, or null
     };
     this.clearSong();
   }

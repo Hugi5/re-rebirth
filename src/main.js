@@ -45,7 +45,7 @@ const files = new Files(state, {
     if (file instanceof Blob) remember(file);
   },
 });
-const app = { clock, engine, files, library, notify, toggleFullscreen };
+const app = { clock, engine, files, library, notify, toggleFullscreen, redraw: () => requestRender() };
 // Hardware moves are edits like pointer ones: redraw and autosave.
 app.midi = new Midi(state, engine, {
   onChange: () => {
@@ -194,6 +194,11 @@ window.addEventListener('keydown', (e) => {
   }
   if (e.code === 'Escape' && state.ui.midiLearn) {
     state.ui.midiLearn = null;
+    requestRender();
+    return;
+  }
+  if (e.code === 'Escape' && state.ui.export) {
+    if (state.ui.export.status !== 'rendering') state.ui.export = null;
     requestRender();
     return;
   }

@@ -4,6 +4,7 @@
 import { hits } from '../../ui/hits.js';
 import { click, tempoDrag } from '../../ui/handlers.js';
 import { button, icon, lcd, led, line, panel, sevenSeg, sevenSegWidth, shapeWidth, text, textWidth } from '../primitives.js';
+import { openExport } from '../export.js';
 import { C } from '../theme.js';
 
 export const STAGE_BAR_H = 30;
@@ -16,6 +17,7 @@ export const STAGES = [
   ['automate', 'AUTOMATE'],
 ];
 const COPY = {
+  export: 'EXPORT',
   midi: 'MIDI',
   learn: 'LEARN',
   keys: (oct) => `A\u2013K NOTES \u00B7 Z X OCTAVE ${oct > 0 ? '+' : ''}${oct} \u00B7 \u21E7 ACCENT \u00B7 TAB SLIDE \u00B7 \u232B REST`,
@@ -42,7 +44,8 @@ export class StageBar {
 
     let rx = w - 8;
     rx -= this.drawFullscreen(ctx, rx) + 3;
-    this.drawMidi(ctx, rx);
+    rx -= this.drawMidi(ctx, rx) + 3;
+    tab(ctx, rx, ROW, COPY.export, false, () => openExport(state), 'stage.export', 'right');
   }
 
   // Connects MIDI, then toggles MIDI learn (lit, reading LEARN). The LED shows

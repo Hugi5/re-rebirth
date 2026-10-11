@@ -15,6 +15,7 @@
   - LATCH (the default) holds a knob's last value until the end of the pass; TOUCH lets it go a moment after you stop moving it. Either way the knob's old automation carries on after.
   - UNDO PASS takes back the pass being recorded, or the one before; up to 32 passes.
   - The timeline's lanes show the automation of the devices on screen, zoomed to the loop; knobs touched in this pass are marked and listed first.
+- **EXPORT WAV** on the PATTERNS / AUTOMATE bar: renders the whole song, the A–B loop, or the current patterns for 4 to 32 bars, faster than real time with the same sound engine, and gives you a 48 kHz 16-bit stereo WAV (on iPad and iPhone through the share sheet, so you can save it to Files or AirDrop it). It shows the length first and the peak level after, and warns if the master clipped.
 - **MIDI controllers** (Chrome, Edge and Firefox; Safari has no Web MIDI). MIDI on the PATTERNS / AUTOMATE bar connects; its light shows the connection, and it reconnects by itself next time.
   - Set up for an Arturia MiniLab 3 in its factory program, following the instrument on screen:
     - Knobs 1–6 play it: on a bass line cutoff, resonance, env mod, decay, accent, tuning; on a drum machine the selected instrument's knobs (hit a pad to select one), its accent level and pan. Knob 7 is its delay send, knob 8 the distortion amount.
