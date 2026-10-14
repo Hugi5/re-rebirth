@@ -83,11 +83,12 @@ export function tempoDrag(state) {
 // Acts when the pointer is released instead of pressed. Needed for anything that
 // opens system UI (file picker, download, new tab): on touch screens browsers only
 // treat the release as a user gesture (pointerdown doesn't count on iOS).
+// fn gets the press event (to see Shift).
 export function release(fn, key) {
   return {
     cursor: 'pointer',
     key,
-    down: () => ({ up: fn }),
+    down: (ev) => ({ up: () => fn(ev) }),
   };
 }
 

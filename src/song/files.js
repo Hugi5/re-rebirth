@@ -1,5 +1,6 @@
 // Opening/saving songs, drag & drop, and local autosave.
 import { isRbs, parseRbs } from './rbs.js';
+import { rbsLosses, writeRbs } from './rbs-write.js';
 import { applySession, serialize } from './session.js';
 
 const AUTOSAVE_KEY = 're-rebirth.session';
@@ -66,13 +67,32 @@ export class Files {
     input.click();
   }
 
-  save() {
+  // Saves are named after the file the song came from: a ReBirth song's title
+  // is often a credit ("(c) by ..."). New songs use the title.
+  baseName() {
     const { info } = this.state;
-    const base = (info.title || info.file.replace(/\.[^.]+$/, '') || 'untitled').replace(/[\\/:*?"<>|]+/g, '_');
-    const blob = new Blob([JSON.stringify(serialize(this.state))], { type: 'application/json' });
-    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `${base}.rerebirth.json` });
+    const file = info.file.replace(/(\.rerebirth\.json|\.json|\.rbs)+.*$/i, '');
+    return (file || info.title.trim() || 'untitled').replace(/[\\/:*?"<>|]+/g, '_');
+  }
+
+  download(blob, name) {
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: name });
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  save() {
+    this.download(new Blob([JSON.stringify(serialize(this.state))], { type: 'application/json' }), `${this.baseName()}.rerebirth.json`);
+  }
+
+  // As a ReBirth 2.0.1 song, for ReBirth itself or anything else that reads
+  // .rbs. Returns a notice, naming what the format couldn't hold.
+  saveRbs() {
+    const session = serialize(this.state);
+    const name = `${this.baseName()}.rbs`;
+    this.download(new Blob([writeRbs(session)], { type: 'application/octet-stream' }), name);
+    const lost = rbsLosses(session);
+    return `Saved ${name}${lost.length ? ` \u00B7 not in .rbs: ${lost.join(', ')}` : ''}`;
   }
 
 

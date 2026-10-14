@@ -1,21 +1,22 @@
-// EXPORT WAV window: renders the song, the A-B loop or the current patterns
-// offline with the real engine, then hands over the file (download, or the
-// share sheet on iPad/iPhone).
+// EXPORT window: renders the song, the A-B loop or the current patterns
+// offline with the real engine to a WAV, then hands over the file (download,
+// or the share sheet on iPad/iPhone). Below, the song as a ReBirth .rbs.
 import { renderSession, wavBlob } from '../audio/offline.js';
 import { shareFiles } from '../song/library.js';
 import { serialize } from '../song/session.js';
 import { songBars, TICKS_PER_BAR } from '../song/song.js';
 import { hits } from '../ui/hits.js';
 import { click, release } from '../ui/handlers.js';
-import { brushed, button, lcd, led, MONO, panel, rrect, screws, text, vgrad } from './primitives.js';
+import { brushed, button, lcd, led, MONO, panel, px, rrect, screws, text, vgrad } from './primitives.js';
 import { C } from './theme.js';
 
 const W = 360;
-const H = 196;
+const H = 232;
+const RBS_Y = 202; // the ReBirth song row
 const PATTERN_BARS = [4, 8, 16, 32];
 const TAIL = 2; // seconds after the last bar, for delay and decay tails
 const COPY = {
-  title: 'EXPORT WAV',
+  title: 'EXPORT',
   what: 'WHAT',
   song: 'WHOLE SONG',
   loop: 'LOOP A\u2013B',
@@ -30,6 +31,9 @@ const COPY = {
   summary: (bars, secs) => `${bars} BARS \u00B7 ${formatTime(secs)} \u00B7 48 KHZ 16-BIT STEREO`,
   done: (peak) => `DONE \u00B7 PEAK ${peak > -0.05 ? '0.0' : peak.toFixed(1)} DBFS${peak > -0.05 ? ' \u00B7 CLIPPED, TURN THE MASTER DOWN' : ''}`,
   failed: (msg) => `FAILED: ${msg}`.toUpperCase(),
+  rbs: 'REBIRTH SONG',
+  rbsHint: 'PATTERNS, ARRANGEMENT, KNOBS AND AUTOMATION, FOR REBIRTH 2.0.1',
+  saveRbs: 'SAVE .RBS',
 };
 
 // iPad and iPhone can't download into a folder: they get the share sheet
@@ -178,6 +182,14 @@ export function drawExport(ctx, rackW, rackH, state, app) {
     text(ctx, COPY.again, W / 2, by + 34, { size: 5.5, weight: 800, color: C.inkMuted, spacing: 0.6 });
     hits.rect(ctx, W / 2 - 34, by + 28, 68, 12, again);
   }
+
+  // The song itself, as a ReBirth file (no rendering).
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillRect(18, RBS_Y - 10, W - 36, px(1));
+  text(ctx, COPY.rbs, 24, RBS_Y + 5, label);
+  text(ctx, COPY.rbsHint, 24, RBS_Y + 16, { ...label, size: 5, spacing: 0.3 });
+  const rw = 90;
+  actionButton(ctx, W - 24 - rw, RBS_Y - 1, rw, COPY.saveRbs, busy ? null : release(() => app.notify(app.files.saveRbs()), 'export.rbs'), 'export.rbs', !busy);
   ctx.restore();
 }
 

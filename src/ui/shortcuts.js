@@ -183,7 +183,8 @@ export function shortcutGroups(state, app) {
       ...(ui.stage === 'patterns' && !ui.picker
         ? []
         : [{ keys: 'F', label: 'Full screen on / off', test: key('KeyF'), run: (e) => !e.repeat && app.toggleFullscreen() }]),
-      { keys: '\u2318/CTRL S', label: 'Save the song', test: key('KeyS', { withMod: true }), run: () => app.files.save() },
+      { keys: '\u2318/CTRL S', label: 'Save the song', test: key('KeyS', { withMod: true, shift: false }), run: () => app.files.save() },
+      { keys: '\u2318/CTRL \u21E7 S', label: 'Save as a ReBirth song (.rbs)', test: key('KeyS', { withMod: true, shift: true }), run: () => app.notify(app.files.saveRbs()) },
       { keys: '\u2318/CTRL O', label: 'Open a song', test: key('KeyO', { withMod: true }), run: () => app.files.pick() },
       { keys: '\u2318/CTRL E', label: 'Export WAV', test: key('KeyE', { withMod: true }), run: () => openExport(state) },
       { keys: 'ESC', label: 'Close a window, the picker, this list' },

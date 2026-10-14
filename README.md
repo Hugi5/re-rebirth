@@ -68,7 +68,7 @@ Everything has a key, and <kbd>/</kbd> lists the ones that work where you are, i
 - **Sequencer:** 32 patterns per device (banks A–D), length and shuffle per pattern, copy/paste/clear/random.
 - **Song mode:** play a song's arrangement and automation, loop a range, or arm REC and record pattern changes and knob moves.
 - **Automation window:** every recorded control of the song as a graph over time. Pan, zoom, and click the ruler to jump.
-- **Songs:** opens ReBirth 2.0 / 2.0.1 `.rbs` files and saves its own `.json`. Work is autosaved in the browser.
+- **Songs:** opens ReBirth 2.0 / 2.0.1 `.rbs` files and saves its own `.json`, or a `.rbs` that ReBirth itself can open (⌘/Ctrl ⇧ S). Work is autosaved in the browser.
 - **Song library:** drop folders of songs; search, sort, rate and share them.
 - **Stages, MIDI, WAV export:** see [Making music](#making-music).
 - The rack scales to fill the window. It works with a mouse, a trackpad or touch, including iPad and iPhone.
@@ -90,6 +90,7 @@ Everything has a key, and <kbd>/</kbd> lists the ones that work where you are, i
 | <kbd>M</kbd>, <kbd>Shift</kbd> <kbd>M</kbd> | Instrument on/off, solo |
 | <kbd>R</kbd>, <kbd>Home</kbd>, <kbd>⌘/Ctrl</kbd> <kbd>Z</kbd> | Record, to the start, undo a pass or edit |
 | <kbd>⌘/Ctrl</kbd> <kbd>S</kbd> / <kbd>O</kbd> / <kbd>E</kbd> | Save, open, export WAV |
+| <kbd>⌘/Ctrl</kbd> <kbd>⇧</kbd> <kbd>S</kbd>, or Shift-click SAVE | Save as a ReBirth song (`.rbs`) |
 | <kbd>Esc</kbd> | Close a window |
 | <kbd>F</kbd> | Full screen on/off (outside PATTERNS) |
 | PATTERNS, bass shown: <kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> … <kbd>K</kbd> | Write a note (C to C) on the selected step and move on; <kbd>Shift</kbd> adds accent |
@@ -123,7 +124,7 @@ The app is plain JavaScript with no framework, built with Vite:
 | `src/audio/` | Web Audio engine: bass voice, drum voices, effects, mixer |
 | `src/render/` | Canvas views: the rack, the focus stages, devices, controls, windows |
 | `src/sequencer/` | Lookahead clock and pattern scheduling |
-| `src/song/` | Song model, playback/recording, `.rbs` reader, `.json` sessions |
+| `src/song/` | Song model, playback/recording, `.rbs` reader and writer, `.json` sessions |
 | `src/ui/` | Pointer handling, hit regions, keyboard shortcuts |
 | `src/midi.js` | Web MIDI: controller layouts, setup walkthrough, learn |
 | `tools/` | Offline rendering and analysis scripts used for calibration; `icons.mjs` renders the home-screen PNGs from `public/icon.svg`; `screenshot.mjs` takes this README's top screenshot and `screenshots.mjs` the stage ones in `docs/screenshots/`; `video.mjs` makes a 1080p video of a song playing, views switching |

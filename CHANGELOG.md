@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0 — 2026-10-12
+
+### New
+- **Save as a ReBirth song (.rbs):** ⌘/Ctrl ⇧ S, Shift-click SAVE in the rack, or SAVE .RBS in the EXPORT window. Patterns, the arrangement, every knob and its automation, mixer and effects go into a ReBirth 2.0.1 file that ReBirth (and Re-Rebirth) can open. What the format has no room for (the bass lines' volume knobs, the delay return) is named in the notice. Saved songs are named after the file they came from, not their title, which in ReBirth songs is often a credit.
+
 ## 0.6.0 — 2026-10-11
 
 ### New

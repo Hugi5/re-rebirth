@@ -128,10 +128,12 @@ export class Transport {
 
     const files = this.app.files;
     // OPEN and SAVE open system UI, so they fire on release (see `release`).
+    // Shift-click SAVE: as a ReBirth song (.rbs).
+    const save = (ev) => (ev.fine ? this.app.notify(files.saveRbs()) : files.save());
     const buttons = [
       ['NEW', 32, () => files.newSong(), click],
       ['OPEN', 36, () => files.pick(), release],
-      ['SAVE', 36, () => files.save(), release],
+      ['SAVE', 36, save, release],
       ['LIBRARY', 46, () => openLibrary(state), click],
     ];
     let bx = SONG_X;
