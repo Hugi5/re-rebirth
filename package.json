@@ -1,5 +1,6 @@
 {
   "name": "re-rebirth",
+  "license": "MIT",
   "private": true,
   "version": "0.7.0",
   "type": "module",

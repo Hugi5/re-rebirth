@@ -165,6 +165,10 @@ kamal deploy
 
 `SITE_HOST` needs an A record pointing at `SITE_SERVER`, with ports 80 and 443 open for the certificate.
 
+## License
+
+The code is [MIT](LICENSE). Two files in the repository aren't mine and keep their own terms: the format description [`docs/RBS42.txt`](docs/RBS42.txt) (Propellerhead Software) and the example song [`public/songs/tgv-kilomix-98.rbs`](public/songs/tgv-kilomix-98.rbs) (T.G.ViRUS).
+
 ## Credits
 
 - Made by Oleh Khomei, 2026. See [`CHANGELOG.md`](CHANGELOG.md) for what changed between versions.
