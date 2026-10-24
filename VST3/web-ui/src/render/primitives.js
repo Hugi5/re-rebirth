@@ -1,0 +1,614 @@
+// Vector drawing primitives. Everything is drawn in rack design units and
+// scaled by the context transform, so no bitmap assets and no blur on resize.
+// Canvas shadows ignore the transform, so soft shadows are faked with gradients.
+import { C } from './theme.js';
+
+export const FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+export const MONO = 'Menlo, "SF Mono", Consolas, monospace';
+const TAU = Math.PI * 2;
+
+export const clamp01 = (v) => Math.min(1, Math.max(0, v));
+
+export function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+export function rgba(hex, a) {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// amt < 0 darkens towards black, amt > 0 lightens towards white.
+export function shade(hex, amt) {
+  const f = (c) => Math.round(amt < 0 ? c * (1 + amt) : c + (255 - c) * amt);
+  const [r, g, b] = hexToRgb(hex);
+  return `rgb(${f(r)},${f(g)},${f(b)})`;
+}
+
+function addStops(g, stops) {
+  stops.forEach((c, i) => g.addColorStop(stops.length === 1 ? 0 : i / (stops.length - 1), c));
+  return g;
+}
+
+export const vgrad = (ctx, y0, y1, stops) => addStops(ctx.createLinearGradient(0, y0, 0, y1), stops);
+export const hgrad = (ctx, x0, x1, stops) => addStops(ctx.createLinearGradient(x0, 0, x1, 0), stops);
+
+export function circle(ctx, cx, cy, r) {
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, TAU);
+}
+
+export function rrect(ctx, x, y, w, h, r = 2) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+}
+
+export function line(ctx, x0, y0, x1, y1) {
+  ctx.beginPath();
+  ctx.moveTo(x0, y0);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+}
+
+function font({ size = 7, weight = 700, italic = false, family = FONT }) {
+  return `${italic ? 'italic ' : ''}${weight} ${size}px ${family}`;
+}
+
+export function text(ctx, s, x, y, opts = {}) {
+  const { color = C.inkLight, align = 'center', baseline = 'middle', spacing = 0 } = opts;
+  ctx.font = font(opts);
+  ctx.fillStyle = color;
+  ctx.textAlign = align;
+  ctx.textBaseline = baseline;
+  if (spacing && 'letterSpacing' in ctx) {
+    ctx.letterSpacing = `${spacing}px`;
+    ctx.fillText(s, x, y);
+    ctx.letterSpacing = '0px';
+  } else {
+    ctx.fillText(s, x, y);
+  }
+}
+
+// Includes letter spacing, as `text` draws it.
+export function textWidth(ctx, s, opts = {}) {
+  ctx.font = font(opts);
+  const spacing = opts.spacing && 'letterSpacing' in ctx ? opts.spacing * s.length : 0;
+  return ctx.measureText(s).width + spacing;
+}
+
+// Line unit. Shapes and type scale with the view, but strokes and hairline
+// details (bevels, rims, separators) stay at most 1 CSS px per unit however
+// large it's drawn, like SVG's non-scaling-stroke: a zoomed view stays crisp
+// instead of looking like a low-resolution UI blown up.
+// - thinLines(ctx) makes ctx.lineWidth count in line units, so every stroke
+//   follows without changes at the call sites;
+// - shapeWidth(ctx, w) sets a width that is part of a shape (knob pointer,
+//   icon) and should scale like it;
+// - px(n) converts line units to design units, for hairline geometry drawn
+//   with fills or offsets.
+// The views call setLineScale after setting each transform.
+let LINE = 1;
+let rawWidth = null;
+
+export const px = (n) => n * LINE;
+
+export function setLineScale(ctx) {
+  const m = ctx.getTransform();
+  const css = Math.hypot(m.a, m.b) / (globalThis.devicePixelRatio || 1);
+  const prev = LINE;
+  LINE = Math.min(1, 1 / css);
+  return prev;
+}
+
+export function restoreLineScale(prev) {
+  LINE = prev;
+}
+
+export function thinLines(ctx) {
+  rawWidth = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(ctx), 'lineWidth');
+  Object.defineProperty(ctx, 'lineWidth', {
+    configurable: true,
+    get: () => rawWidth.get.call(ctx) / LINE,
+    set: (w) => rawWidth.set.call(ctx, w * LINE),
+  });
+}
+
+export function shapeWidth(ctx, w) {
+  if (rawWidth) rawWidth.set.call(ctx, w);
+  else ctx.lineWidth = w;
+}
+
+export function panel(ctx, x, y, w, h, stops, { radius = 2, bevel = 0.3 } = {}) {
+  rrect(ctx, x, y, w, h, radius);
+  ctx.fillStyle = vgrad(ctx, y, y + h, stops);
+  ctx.fill();
+  // Bevel: a lit top-left edge and a shaded bottom-right one, following the
+  // rounded corners and meeting diagonally at the other two.
+  const lw = 1;
+  const i = px(lw) / 2;
+  const r = Math.max(0, radius - i);
+  const [l, t, rt, b] = [x + i + r, y + i + r, x + w - i - r, y + h - i - r]; // corner centres
+  const q = Math.PI / 4;
+  ctx.lineWidth = lw;
+  ctx.strokeStyle = `rgba(255,255,255,${bevel})`;
+  ctx.beginPath();
+  ctx.arc(l, b, r, 3 * q, 4 * q);
+  ctx.arc(l, t, r, 4 * q, 6 * q);
+  ctx.arc(rt, t, r, 6 * q, 7 * q);
+  ctx.stroke();
+  ctx.strokeStyle = `rgba(0,0,0,${Math.min(1, bevel + 0.35)})`;
+  ctx.beginPath();
+  ctx.arc(rt, t, r, 7 * q, 8 * q);
+  ctx.arc(rt, b, r, 0, 2 * q);
+  ctx.arc(l, b, r, 2 * q, 3 * q);
+  ctx.stroke();
+}
+
+let brushedTile = null;
+const brushedPatterns = new WeakMap();
+
+function brushedPattern(ctx) {
+  let pattern = brushedPatterns.get(ctx);
+  if (pattern) return pattern;
+  if (!brushedTile) {
+    const W = 512;
+    const H = 128;
+    brushedTile = document.createElement('canvas');
+    brushedTile.width = W;
+    brushedTile.height = H;
+    const g = brushedTile.getContext('2d');
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 1400; i++) {
+      const y = rnd() * H;
+      const x = rnd() * W;
+      const len = 40 + rnd() * 260;
+      g.strokeStyle = rnd() > 0.5 ? `rgba(255,255,255,${0.05 + rnd() * 0.12})` : `rgba(0,0,0,${0.04 + rnd() * 0.1})`;
+      g.lineWidth = 0.5 + rnd() * 0.6;
+      for (const ox of [0, -W]) {
+        g.beginPath();
+        g.moveTo(x + ox, y);
+        g.lineTo(x + ox + len, y);
+        g.stroke();
+      }
+    }
+  }
+  pattern = ctx.createPattern(brushedTile, 'repeat');
+  brushedPatterns.set(ctx, pattern);
+  return pattern;
+}
+
+export function brushed(ctx, x, y, w, h, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = brushedPattern(ctx);
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+export function softShadow(ctx, cx, cy, r, alpha = 0.5) {
+  const g = ctx.createRadialGradient(cx, cy, r * 0.2, cx, cy, r);
+  g.addColorStop(0, `rgba(0,0,0,${alpha})`);
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  circle(ctx, cx, cy, r);
+  ctx.fill();
+}
+
+export function screw(ctx, cx, cy, r = 3.4, angle = 0.6) {
+  softShadow(ctx, cx + 0.5, cy + 1, r + 1.8, 0.55);
+  const g = ctx.createRadialGradient(cx - r * 0.4, cy - r * 0.4, r * 0.1, cx, cy, r);
+  g.addColorStop(0, '#f4f4f4');
+  g.addColorStop(0.6, '#a7a9ad');
+  g.addColorStop(1, '#55585d');
+  circle(ctx, cx, cy, r);
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+  ctx.lineWidth = 0.6;
+  ctx.stroke();
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
+  ctx.strokeStyle = 'rgba(30,30,30,0.85)';
+  shapeWidth(ctx, r * 0.28);
+  ctx.lineCap = 'round';
+  line(ctx, -r * 0.55, 0, r * 0.55, 0);
+  line(ctx, 0, -r * 0.55, 0, r * 0.55);
+  ctx.restore();
+}
+
+export function screws(ctx, w, h, inset = 7, top = 9) {
+  screw(ctx, inset, top, 3.4, 0.4);
+  screw(ctx, w - inset, top, 3.4, 1.1);
+  screw(ctx, inset, h - top, 3.4, 0.9);
+  screw(ctx, w - inset, h - top, 3.4, 0.2);
+}
+
+export const KNOB_A0 = Math.PI * 0.75;
+export const KNOB_SWEEP = Math.PI * 1.5;
+
+export function knob(ctx, cx, cy, r, value, s, { ticks = 11 } = {}) {
+  if (ticks > 1) {
+    ctx.strokeStyle = s.tick;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < ticks; i++) {
+      const a = KNOB_A0 + (KNOB_SWEEP * i) / (ticks - 1);
+      const major = i === 0 || i === ticks - 1;
+      const r0 = r + 2.2;
+      const r1 = r + (major ? 5 : 4);
+      ctx.lineWidth = major ? 1.1 : 0.8;
+      line(ctx, cx + Math.cos(a) * r0, cy + Math.sin(a) * r0, cx + Math.cos(a) * r1, cy + Math.sin(a) * r1);
+    }
+  }
+
+  softShadow(ctx, cx + r * 0.1, cy + r * 0.25, r * 1.35, 0.6);
+
+  let g = ctx.createRadialGradient(cx - r * 0.35, cy - r * 0.45, r * 0.1, cx, cy, r);
+  g.addColorStop(0, s.body[0]);
+  g.addColorStop(1, s.body[1]);
+  circle(ctx, cx, cy, r);
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  if (s.knurl) {
+    ctx.strokeStyle = s.knurl;
+    ctx.lineWidth = 0.6;
+    for (let i = 0; i < 32; i++) {
+      const a = (TAU * i) / 32;
+      line(ctx, cx + Math.cos(a) * r * 0.8, cy + Math.sin(a) * r * 0.8, cx + Math.cos(a) * r * 0.97, cy + Math.sin(a) * r * 0.97);
+    }
+  }
+  circle(ctx, cx, cy, r);
+  ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  if (s.cap) {
+    const rc = r * s.capRatio;
+    g = ctx.createRadialGradient(cx - rc * 0.4, cy - rc * 0.5, rc * 0.05, cx, cy, rc * 1.05);
+    g.addColorStop(0, s.cap[0]);
+    g.addColorStop(1, s.cap[1]);
+    circle(ctx, cx, cy, rc);
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rc - px(0.3), Math.PI * 1.05, Math.PI * 1.75);
+    ctx.stroke();
+  }
+
+  const a = KNOB_A0 + KNOB_SWEEP * clamp01(value);
+  const ca = Math.cos(a);
+  const sa = Math.sin(a);
+  ctx.lineCap = 'round';
+  for (const [color, from, to, width] of s.pointers) {
+    ctx.strokeStyle = color;
+    shapeWidth(ctx, Math.max(0.9, r * width));
+    line(ctx, cx + ca * r * from, cy + sa * r * from, cx + ca * r * to, cy + sa * r * to);
+  }
+}
+
+export function led(ctx, cx, cy, r, on, color = C.ledRed) {
+  if (on) {
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 3.5);
+    glow.addColorStop(0, rgba(color, 0.55));
+    glow.addColorStop(1, rgba(color, 0));
+    ctx.fillStyle = glow;
+    circle(ctx, cx, cy, r * 3.5);
+    ctx.fill();
+  }
+  circle(ctx, cx, cy + px(0.3), r + px(0.9));
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fill();
+  const g = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.05, cx, cy, r);
+  if (on) {
+    g.addColorStop(0, '#fffbe8');
+    g.addColorStop(0.35, color);
+    g.addColorStop(1, shade(color, -0.35));
+  } else {
+    g.addColorStop(0, shade(color, -0.45));
+    g.addColorStop(1, shade(color, -0.82));
+  }
+  circle(ctx, cx, cy, r);
+  ctx.fillStyle = g;
+  ctx.fill();
+  circle(ctx, cx - r * 0.35, cy - r * 0.4, r * 0.28);
+  ctx.fillStyle = on ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.22)';
+  ctx.fill();
+}
+
+export function ledBar(ctx, x, y, w, h, on, color) {
+  if (on) {
+    ctx.fillStyle = rgba(color, 0.25);
+    ctx.fillRect(x - px(1.5), y - px(1.5), w + px(3), h + px(3));
+  }
+  ctx.fillStyle = on ? color : shade(color, -0.8);
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = on ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.05)';
+  ctx.fillRect(x, y, w, h * 0.35);
+}
+
+// Returns the vertical press offset so callers can shift face labels with it.
+export function button(ctx, x, y, w, h, { face = C.btnDark, pressed = false, radius = 2 } = {}) {
+  // Rim, depth below and press travel are hairline details (line units).
+  const off = pressed ? px(1) : 0;
+  rrect(ctx, x - px(0.6), y - px(0.6), w + px(1.2), h + px(2.6), radius + px(0.6));
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fill();
+  rrect(ctx, x, y + off, w, h, radius);
+  ctx.fillStyle = vgrad(ctx, y + off, y + off + h, face);
+  ctx.fill();
+  ctx.strokeStyle = pressed ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 0.7;
+  line(ctx, x + radius, y + off + px(0.6), x + w - radius, y + off + px(0.6));
+  return off;
+}
+
+export function fader(ctx, x, y, w, h, value, { cap = C.faderCap, tickColor = 'rgba(255,255,255,0.22)' } = {}) {
+  const cx = x + w / 2;
+  const capH = 11;
+  ctx.strokeStyle = tickColor;
+  ctx.lineWidth = 0.6;
+  for (let i = 0; i <= 10; i++) {
+    const ty = y + capH / 2 + ((h - capH) * i) / 10;
+    const len = i % 5 === 0 ? 4 : 2.5;
+    line(ctx, x, ty, x + len, ty);
+    line(ctx, x + w - len, ty, x + w, ty);
+  }
+  rrect(ctx, cx - 1.6, y, 3.2, h, 1.6);
+  ctx.fillStyle = '#050505';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  line(ctx, cx - 1.6, y + h + px(0.5), cx + 1.6, y + h + px(0.5));
+
+  const cy = y + (h - capH) * (1 - clamp01(value));
+  rrect(ctx, x + 1, cy + px(1.5), w - 2, capH, 1.5);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fill();
+  rrect(ctx, x + 1, cy, w - 2, capH, 1.5);
+  ctx.fillStyle = vgrad(ctx, cy, cy + capH, cap);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+  ctx.lineWidth = 0.6;
+  ctx.stroke();
+  ctx.lineWidth = 0.8;
+  ctx.strokeStyle = '#1a1a1a';
+  line(ctx, x + 2.5, cy + capH / 2, x + w - 2.5, cy + capH / 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  line(ctx, x + 2.5, cy + capH / 2 + px(1), x + w - 2.5, cy + capH / 2 + px(1));
+}
+
+export function lcd(ctx, x, y, w, h, stops = C.lcd, radius = 2) {
+  rrect(ctx, x - px(1), y - px(1), w + px(2), h + px(2), radius + px(1));
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = 0.8;
+  line(ctx, x, y + h + px(1.4), x + w, y + h + px(1.4));
+  rrect(ctx, x, y, w, h, radius);
+  ctx.fillStyle = vgrad(ctx, y, y + h, stops);
+  ctx.fill();
+  ctx.save();
+  rrect(ctx, x, y, w, h, radius);
+  ctx.clip();
+  ctx.fillStyle = 'rgba(255,255,255,0.035)';
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + w, y);
+  ctx.lineTo(x + w, y + h * 0.3);
+  ctx.lineTo(x, y + h * 0.55);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+const SEGMENTS = {
+  0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg', 5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg',
+  '-': 'g', ' ': '', _: 'd',
+  A: 'abcefg', B: 'cdefg', b: 'cdefg', C: 'adef', D: 'bcdeg', d: 'bcdeg', E: 'adefg', F: 'aefg', H: 'bcefg',
+  L: 'def', P: 'abefg', S: 'acdfg', U: 'bcdef', n: 'ceg', o: 'cdeg', r: 'eg', t: 'defg',
+};
+
+function segmentPolys(w, h, t) {
+  const ht = t / 2;
+  const g = t * 0.2;
+  const L = ht;
+  const R = w - ht;
+  const T = ht;
+  const M = h / 2;
+  const B = h - ht;
+  const H = (x0, x1, y) => [[x0, y], [x0 + ht, y - ht], [x1 - ht, y - ht], [x1, y], [x1 - ht, y + ht], [x0 + ht, y + ht]];
+  const V = (x, y0, y1) => [[x, y0], [x + ht, y0 + ht], [x + ht, y1 - ht], [x, y1], [x - ht, y1 - ht], [x - ht, y0 + ht]];
+  return {
+    a: H(L + g, R - g, T),
+    g: H(L + g, R - g, M),
+    d: H(L + g, R - g, B),
+    f: V(L, T + g, M - g),
+    b: V(R, T + g, M - g),
+    e: V(L, M + g, B - g),
+    c: V(R, M + g, B - g),
+  };
+}
+
+function segmentCells(str) {
+  const cells = [];
+  for (const ch of String(str)) {
+    if (ch === '.' && cells.length && !cells[cells.length - 1].dp) cells[cells.length - 1].dp = true;
+    else cells.push({ ch, dp: false });
+  }
+  return cells;
+}
+
+export function sevenSegWidth(str, dw, gap = dw * 0.32) {
+  const n = segmentCells(str).length;
+  return n * dw + (n - 1) * gap;
+}
+
+// `on` must be a hex color (used for the glow).
+export function sevenSeg(ctx, str, x, y, dw, dh, opts = {}) {
+  const { on = C.lcdOn, off = C.lcdOff, gap = dw * 0.32, thick = dw * 0.2, skew = 0.07 } = opts;
+  const polys = segmentPolys(dw, dh, thick);
+  segmentCells(str).forEach((cell, i) => {
+    ctx.save();
+    ctx.translate(x + i * (dw + gap), y);
+    ctx.transform(1, 0, -skew, 1, skew * dh, 0);
+    const lit = SEGMENTS[cell.ch] ?? '';
+    for (const k of 'abcdefg') {
+      const pts = polys[k];
+      ctx.beginPath();
+      pts.forEach(([px, py], j) => (j ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+      ctx.closePath();
+      if (lit.includes(k)) {
+        ctx.strokeStyle = rgba(on, 0.3);
+        shapeWidth(ctx, thick * 0.9);
+        ctx.stroke();
+        ctx.fillStyle = on;
+      } else {
+        ctx.fillStyle = off;
+      }
+      ctx.fill();
+    }
+    circle(ctx, dw + gap * 0.45, dh - thick * 0.5, thick * 0.55);
+    ctx.fillStyle = cell.dp ? on : off;
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+const WHITE_KEYS = [0, 2, 4, 5, 7, 9, 11, 12];
+const BLACK_KEYS = [[1, 1], [3, 2], [6, 4], [8, 5], [10, 6]]; // [note, boundary between white keys]
+
+// Key rectangles, white keys first, so hit-testing can register blacks on top.
+export function keyboardKeys(x, y, w, h) {
+  const ww = w / WHITE_KEYS.length;
+  const bw = ww * 0.6;
+  const bh = h * 0.6;
+  return [
+    ...WHITE_KEYS.map((note, i) => ({ note, black: false, x: x + i * ww, y, w: ww, h })),
+    ...BLACK_KEYS.map(([note, b]) => ({ note, black: true, x: x + b * ww - bw / 2, y, w: bw, h: bh })),
+  ];
+}
+
+export function miniKeyboard(ctx, x, y, w, h, { active = -1, color = C.bassAccent } = {}) {
+  rrect(ctx, x - 2, y - 2, w + 4, h + 4, 2);
+  ctx.fillStyle = '#050505';
+  ctx.fill();
+  for (const k of keyboardKeys(x, y, w, h)) {
+    const on = k.note === active;
+    if (!k.black) {
+      ctx.beginPath();
+      ctx.roundRect(k.x + 0.4, y, k.w - 0.8, h, [0, 0, 2, 2]);
+      ctx.fillStyle = vgrad(ctx, y, y + h, on ? [shade(color, 0.45), color] : ['#d4d4d1', '#fbfbf8', '#e6e6e3']);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.13)';
+      ctx.fillRect(k.x + 0.4, y + h - 3, k.w - 0.8, 3);
+      continue;
+    }
+    ctx.beginPath();
+    ctx.roundRect(k.x, y, k.w, k.h, [0, 0, 1.5, 1.5]);
+    ctx.fillStyle = vgrad(ctx, y, y + k.h, on ? [shade(color, 0.1), shade(color, -0.35)] : ['#3b3b3b', '#0b0b0b']);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(k.x + 1.4, y, k.w - 2.8, k.h - 4, [0, 0, 1, 1]);
+    ctx.fillStyle = on ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)';
+    ctx.fill();
+  }
+}
+
+export function icon(ctx, kind, cx, cy, s, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  const h = s * 0.5;
+  switch (kind) {
+    case 'play':
+      ctx.moveTo(cx - s * 0.4, cy - h);
+      ctx.lineTo(cx + s * 0.5, cy);
+      ctx.lineTo(cx - s * 0.4, cy + h);
+      break;
+    case 'stop':
+      ctx.rect(cx - s * 0.42, cy - s * 0.42, s * 0.84, s * 0.84);
+      break;
+    case 'rew':
+      for (const ox of [-h, 0]) {
+        ctx.moveTo(cx + ox, cy);
+        ctx.lineTo(cx + ox + h, cy - s * 0.4);
+        ctx.lineTo(cx + ox + h, cy + s * 0.4);
+        ctx.closePath();
+      }
+      break;
+    case 'ff':
+      for (const ox of [h, 0]) {
+        ctx.moveTo(cx + ox, cy);
+        ctx.lineTo(cx + ox - h, cy - s * 0.4);
+        ctx.lineTo(cx + ox - h, cy + s * 0.4);
+        ctx.closePath();
+      }
+      break;
+    case 'up':
+      ctx.moveTo(cx, cy - s * 0.4);
+      ctx.lineTo(cx + h, cy + s * 0.35);
+      ctx.lineTo(cx - h, cy + s * 0.35);
+      break;
+    case 'down':
+      ctx.moveTo(cx, cy + s * 0.4);
+      ctx.lineTo(cx + h, cy - s * 0.35);
+      ctx.lineTo(cx - h, cy - s * 0.35);
+      break;
+    case 'left':
+      ctx.moveTo(cx - s * 0.4, cy);
+      ctx.lineTo(cx + s * 0.35, cy - h);
+      ctx.lineTo(cx + s * 0.35, cy + h);
+      break;
+    case 'right':
+      ctx.moveTo(cx + s * 0.4, cy);
+      ctx.lineTo(cx - s * 0.35, cy - h);
+      ctx.lineTo(cx - s * 0.35, cy + h);
+      break;
+    case 'rec':
+      ctx.arc(cx, cy, s * 0.42, 0, Math.PI * 2);
+      break;
+    case 'loop':
+      ctx.closePath();
+      ctx.save();
+      ctx.strokeStyle = color;
+      shapeWidth(ctx, s * 0.14);
+      ctx.beginPath();
+      ctx.arc(cx, cy, s * 0.36, Math.PI * 0.25, Math.PI * 1.95);
+      ctx.stroke();
+      ctx.restore();
+      ctx.beginPath();
+      ctx.moveTo(cx + s * 0.36, cy - s * 0.32);
+      ctx.lineTo(cx + s * 0.62, cy + s * 0.02);
+      ctx.lineTo(cx + s * 0.1, cy + s * 0.02);
+      break;
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+export function waveIcon(ctx, kind, cx, cy, s, color) {
+  const h = s / 2;
+  ctx.strokeStyle = color;
+  shapeWidth(ctx, 1);
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  if (kind === 'saw') {
+    ctx.moveTo(cx - s, cy + h); ctx.lineTo(cx, cy - h); ctx.lineTo(cx, cy + h); ctx.lineTo(cx + s, cy - h);
+  } else if (kind === 'square') {
+    ctx.moveTo(cx - s, cy + h); ctx.lineTo(cx - s, cy - h); ctx.lineTo(cx, cy - h); ctx.lineTo(cx, cy + h); ctx.lineTo(cx + s, cy + h); ctx.lineTo(cx + s, cy - h);
+  } else if (kind === 'triangle') {
+    ctx.moveTo(cx - s, cy + h); ctx.lineTo(cx, cy - h); ctx.lineTo(cx + s, cy + h);
+  } else if (kind === 'sine') {
+    ctx.moveTo(cx - s, cy);
+    for (let i = 1; i <= 16; i++) { const x = -s + (2 * s * i) / 16; ctx.lineTo(cx + x, cy - h * Math.sin((Math.PI * i) / 8)); }
+  } else if (kind === 'pulse') {
+    ctx.moveTo(cx - s, cy + h); ctx.lineTo(cx - s, cy - h); ctx.lineTo(cx - s * 0.35, cy - h); ctx.lineTo(cx - s * 0.35, cy + h); ctx.lineTo(cx + s * 0.25, cy + h); ctx.lineTo(cx + s * 0.25, cy - h); ctx.lineTo(cx + s, cy - h); ctx.lineTo(cx + s, cy + h);
+  } else if (kind === 'sub') {
+    ctx.moveTo(cx - s, cy - h * 0.45); ctx.quadraticCurveTo(cx - s * 0.5, cy - h * 1.5, cx, cy - h * 0.45); ctx.quadraticCurveTo(cx + s * 0.5, cy + h * 0.6, cx + s, cy - h * 0.45);
+    ctx.moveTo(cx - s, cy + h * 0.55); ctx.quadraticCurveTo(cx - s * 0.5, cy + h * 1.5, cx, cy + h * 0.55); ctx.quadraticCurveTo(cx + s * 0.5, cy - h * 0.6, cx + s, cy + h * 0.55);
+  }
+  ctx.stroke();
+}
