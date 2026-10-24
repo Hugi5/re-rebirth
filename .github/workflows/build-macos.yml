@@ -1,0 +1,62 @@
+
+name: Re-ReBirth macOS Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "VST3/rb-vst3/**"
+      - "VST3/web-ui/**"
+      - ".github/workflows/build-macos.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-macos:
+    runs-on: macos-14
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check source files
+        run: |
+          test -f VST3/rb-vst3/CMakeLists.txt
+          test -f VST3/rb-vst3/Source/PluginProcessor.cpp
+          test -f VST3/web-ui/package.json
+
+      - name: Configure macOS build
+        run: |
+          cmake -S VST3/rb-vst3 \
+            -B VST3/rb-vst3/build-macos-ci \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=arm64
+
+      - name: Compile plugin and standalone
+        run: |
+          cmake --build VST3/rb-vst3/build-macos-ci \
+            --config Release \
+            --parallel 3
+
+      - name: Upload build outputs
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Re-ReBirth-macOS-arm64
+          path: |
+            VST3/rb-vst3/build-macos-ci/ReReBirth_artefacts/Release/VST3/
+            VST3/rb-vst3/build-macos-ci/ReReBirth_artefacts/Release/Standalone/
+          if-no-files-found: error
+          retention-days: 7
+
