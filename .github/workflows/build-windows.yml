@@ -1,0 +1,56 @@
+name: Re-ReBirth Windows 11 Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "VST3/rb-vst3/**"
+      - "VST3/web-ui/**"
+      - ".github/workflows/build-windows.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: VST3/web-ui/package-lock.json
+
+      - name: Check build inputs
+        shell: pwsh
+        run: |
+          if (!(Test-Path "VST3/rb-vst3/CMakeLists.txt")) { throw "Missing JUCE CMake project" }
+          if (!(Test-Path "VST3/rb-vst3/Source/PluginProcessor.cpp")) { throw "Missing plugin processor" }
+          if (!(Test-Path "VST3/web-ui/package.json")) { throw "Missing web UI package" }
+
+      - name: Configure Windows build
+        run: cmake -S VST3/rb-vst3 -B VST3/rb-vst3/build-windows-ci -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compile VST3 and standalone
+        run: cmake --build VST3/rb-vst3/build-windows-ci --config Release --parallel 3
+
+      - name: Upload build outputs
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Re-ReBirth-Windows-x64
+          path: |
+            VST3/rb-vst3/build-windows-ci/ReReBirth_artefacts/Release/VST3/
+            VST3/rb-vst3/build-windows-ci/ReReBirth_artefacts/Release/Standalone/
+          if-no-files-found: error
+          retention-days: 7
