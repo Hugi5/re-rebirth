@@ -112,6 +112,45 @@ The existing test fixture is created in JavaScript by `fixtureState()`, serializ
 
 No result should be marked “pass” merely because a corresponding function exists. The current overall application-validity verdict is **partially implemented, not validated as a ReBirth replacement**.
 
+
+## Original ReBirth vs Re-ReBirth parity protocol
+
+### Principle
+
+The original application is the reference implementation. Compare the same song, tempo, pattern, knob positions, mixer routing, and playback duration in both programs. Record observed differences; do not correct Re-ReBirth based only on assumptions. Keep the original executable and song files local unless redistribution rights are clear.
+
+### A. Functional parity matrix
+
+| Test ID | Test | Procedure | Evidence to capture | Pass condition |
+|---|---|---|---|---|
+| F01 | Startup/default state | Launch each application fresh; record initial tempo, selected mode/pattern, knob defaults and enabled devices. | Screenshots and values | Expected defaults match where the original defines them. |
+| F02 | Original song import | Open the same original .rbs in both applications. Compare title, tempo, device settings, all pattern banks, and song arrangement. | Parsed-state dump from Re-ReBirth plus screenshots/notes from original | No unexplained differences in supported fields. |
+| F03 | Pattern steps | Use a song with sparse and dense patterns, accents, rests, slides, ties and drum hits. Inspect each machine and selected banks. | Per-pattern step listing and screenshots | Step positions and event types agree exactly. |
+| F04 | Song arrangement | Play a song with repeated patterns, changes, loop points and a clear ending. | Pattern sequence and bar-position log | Transitions and end/loop behaviour agree. |
+| F05 | 303 controls | Change tuning, cutoff, resonance, envelope modulation, decay, accent and waveform one at a time; test slide/tie and gate. | Knob positions, MIDI/state log, isolated audio | Control direction/range and musical behaviour match. |
+| F06 | 808/909 controls | Test every voice and tuning/decay/tone/attack control, alternate voices, accents and flams where supported. | Settings and isolated renders | Same event/voice selection and broadly matching response. |
+| F07 | Mixer/effects | Test level, pan, mute, solo, delay, distortion, compressor and PCF separately, then combinations. | Settings and matched renders | Routing and control semantics match; documented limitations are explicit. |
+| F08 | Transport/timing | Start, stop, restart, switch patterns, loop, and change tempo during playback. | Audio loopback and timestamp/bar log | No missing/duplicate steps; timing and transitions within measured tolerance. |
+| F09 | Save/reopen | Save in each app; reopen in the same app. Then test Re-ReBirth export in original ReBirth. | Files, warnings, screenshots | Files reopen and supported data survives; losses are documented. |
+| F10 | MIDI | On a Web MIDI-capable browser, test note entry, pads, CC learn and transport with the same controller if available. | MIDI event log and result notes | Mapped events and transport behaviour agree. |
+
+### B. Audio parity protocol
+
+1. Choose one deterministic original .rbs song. Disable modulation/automation unless that behaviour is the test; set the same tempo, pattern, knobs, levels, pan and effects in both programs.
+2. Capture lossless WAV at the same sample rate if possible. If the original outputs 44.1 kHz, preserve that reference and resample only a copy for aligned analysis. Avoid MP3, normalization, limiters and OS audio enhancements.
+3. Capture a full mix and isolated tests: each 303, each 808/909 voice, then effects. Use the same number of bars and include a short tail.
+4. Align recordings by transient/cross-correlation, compensate for fixed device latency, and match loudness only for diagnostic comparisons—not before measuring the original level difference.
+5. Report objective measures separately: onset timing/drift, peak and RMS level, duration/envelope, waveform correlation, spectral centroid/band energy, and residual/null difference. Low waveform correlation alone does not prove a poor musical match when oscillator phase or noise differs.
+6. Listen to level-matched blind A/Bs after measurements. Keep the original and processed files and record the exact settings.
+
+### C. Results ledger template
+
+For each run record: test ID; date; original ReBirth version/build; OS; Re-ReBirth commit SHA; browser/build; song filename and SHA-256; sample rate/bit depth; exact settings; steps performed; expected result; actual result; pass/fail/blocked; evidence file paths; and a short note about the discrepancy.
+
+### First checkpoint / current result
+
+The repository has not yet passed this protocol. The current tests cover a synthetic RBS writer/parser round-trip and a few state assertions. One real original .rbs file has had its chunk layout inspected, but there is no recorded side-by-side run of the original executable, no original-app reopen result for a Re-ReBirth export, and no matched WAV parity report. Therefore the parity status is not yet measured, not pass. The first practical target is F02 plus a short matched audio capture from the same original song; expand only after this baseline is reproducible.
+
 ## Current verdict
 
 - **Application breadth:** substantial; the browser code already implements the core instrument, sequencer, song, MIDI and export systems.
