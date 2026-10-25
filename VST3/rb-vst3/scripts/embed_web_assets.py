@@ -7,7 +7,8 @@ output = pathlib.Path(sys.argv[2]).resolve()
 exe = "npm.cmd" if os.name == "nt" else "npm"
 if not (project / "package.json").exists():
     raise SystemExit(f"Missing package.json in {project}")
-subprocess.run([exe, "install"], cwd=project, check=True)
+install_command = "ci" if (project / "package-lock.json").exists() else "install"
+subprocess.run([exe, install_command], cwd=project, check=True)
 subprocess.run([exe, "run", "build"], cwd=project, check=True)
 dist = project / "dist"
 if not dist.is_dir():
