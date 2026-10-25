@@ -15,6 +15,17 @@ This is a source inspection, not a claim that the app has been run through a ful
 - MIDI is implemented as browser Web MIDI input in `src/midi.js`; the source explicitly notes that Safari does not support Web MIDI.
 - The browser audio engine is Web Audio based. The JUCE native processor is a separate prototype path and must not be used as evidence that browser parity has passed.
 
+### Regression-test coverage added
+
+The feature branch now has `tests/song-io.test.js` and an `npm test` script using Node's built-in test runner. The tests cover:
+
+- RBS writer output identification and metadata (standard mod, title, tempo and version).
+- Writer-to-parser round-trip of transport mode/loop, selected bass and 909 patterns, representative bass flags, drum hit levels, and automation.
+- Applying a parsed RBS session into fresh application state.
+- Rejection of a non-RBS input.
+
+These are regression tests for the file-format path, not proof that arbitrary real-world ReBirth songs import perfectly. They have been added to the branch but have **not been executed in a checked-out runtime here**; run `npm test` locally and report any failures before treating them as passing.
+
 ### Main risks to verify
 
 1. **Original song import:** compare representative `.rbs` files in ReBirth and Re-ReBirth. Check pattern data, machine settings, tempo, song arrangement, and any reported unsupported fields.
@@ -29,10 +40,11 @@ This is a source inspection, not a claim that the app has been run through a ful
 ## Current verdict
 
 - **Application breadth:** substantial; the browser code already implements the core instrument, sequencer, song, MIDI and export systems.
+- **Automated song-I/O tests:** test cases are committed; execution result is still pending.
 - **Operational parity:** not yet verified by this audit.
 - **Sound parity:** not established by source inspection alone; it requires controlled, level-matched ReBirth exports.
 - **Native standalone/VST3 parity:** not established and deliberately out of scope for this browser audit.
 
 ## Test record
 
-For each test, record browser/OS, source `.rbs` or test-session name, exact actions, expected original behaviour, actual Re-ReBirth behaviour, and pass/fail. Do not mark a test passed based solely on the presence of a corresponding function in source.
+For each manual test, record browser/OS, source `.rbs` or test-session name, exact actions, expected original behaviour, actual Re-ReBirth behaviour, and pass/fail. Do not mark a test passed based solely on the presence of a corresponding function in source.
