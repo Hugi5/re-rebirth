@@ -57,6 +57,29 @@ These are useful regression tests, but the round-trip test creates its own fixtu
 7. **MIDI:** verify note entry and drum pads, CC learn, controller setup, disconnect/reconnect, channel handling and transport controls on a supported browser with actual hardware.
 8. **Export parity:** compare offline WAV export against real-time browser playback for the same session; then compare isolated voices against reference ReBirth exports.
 
+
+## Newly confirmed fidelity blocker: sound-source architecture
+
+Inspection of `src/audio/drums.js` confirms that both drum machines are currently generated from Web Audio oscillators, noise, filters, and envelopes. The module header explicitly says `Synthesized drum voices (no samples)`; the 808 and 909 voice tables implement kicks, snares, hats, cymbals, toms and other sounds algorithmically. This is not merely an unverified tuning detail: it is a known architectural difference from original ReBirth's sample-based 909 and its bundled/customizable drum sound resources.
+
+The original-AIFF reference pack already in the investigation assets contains 46 extracted audio resources. The existing spectral cross-reference has strong candidate matches for many voices (for example, similarity scores around 0.96–0.99 for several 808 snare/clap/cowbell matches), but it also has weak or ambiguous matches. Those scores are useful for triage, not proof of exact sample identity or parameter behaviour. The cross-reference is not yet wired into the browser engine.
+
+### Consequence
+
+- **909 sample fidelity: known architectural mismatch**, not just “unproven”. The current synthesized 909 may be musically useful, but it cannot be described as using the original sample-based sound source.
+- **808 fidelity: unproven.** Original ReBirth's 808 is an emulation, so a synthesized voice is not automatically wrong; it must be compared against controlled original exports. The current algorithmic voice remains a reconstruction, not evidence of parity.
+- **303 fidelity: unproven.** It is also synthesized, and needs isolated comparisons of waveform, pitch/tune mapping, accent, slide/tie, filter resonance and envelope against ReBirth renders.
+- **Do not blindly commit extracted proprietary samples to the public repository.** Before integrating them, establish the source/licence and intended distribution rights. The implementation can be designed to load a user-supplied local reference/sample pack or use properly licensed assets; the provenance question should not be hidden by a code change.
+
+### Updated priority order
+
+1. Use the existing original-AIFF reference pack and its manifest to map each resource to likely 808/909 voice and variant; mark confidence and ambiguous mappings.
+2. Produce controlled, isolated ReBirth exports and compare the browser render with level alignment, duration/envelope, spectral shape and transient behaviour.
+3. Decide per voice whether to retain synthesis, improve its model, or use a sample-based source where the original demonstrably does so and asset rights permit it.
+4. Add tests against an independently captured original-song fixture/state. Existing writer-to-reader tests alone can pass when the reader and writer share the same mistake.
+
+This finding changes the status of the audit: the project is not simply awaiting listening tests. We have identified at least one concrete architectural difference (the 909 sound source) and an existing body of reference assets that can drive the next comparison. It still does not tell us how close the current output sounds by ear or by measurement.
+
 ## Current verdict
 
 - **Application breadth:** substantial; the browser code already implements the core instrument, sequencer, song, MIDI and export systems.
