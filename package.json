@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "render": "node tools/render.mjs"
+    "render": "node tools/render.mjs",
+    "test": "node --test"
   },
   "devDependencies": {
     "playwright-core": "^1.64.0",
