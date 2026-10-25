@@ -86,13 +86,11 @@ test('RBS writer -> parser preserves transport, selected patterns, steps and aut
   assert.equal(parsed.drums.r909.patterns[13].tracks.bd[0], 2);
   assert.equal(parsed.drums.r909.patterns[13].tracks.sd[4], 3);
 
-  assert.deepEqual(
-    parsed.song.tracks.bass1.map(({ tick, key, value }) => ({ tick, key, value })),
-    [
-      { tick: 0, key: 'bass1.cutoff', value: 0.25 },
-      { tick: 32, key: 'bass1.cutoff', value: 0.75 },
-    ],
-  );
+  const cutoffEvents = parsed.song.tracks.bass1.filter((e) => e.key === 'bass1.cutoff');
+  assert.deepEqual(cutoffEvents.map(({ tick }) => tick), [0, 32]);
+  // ReBirth stores knob values as 7-bit integers, so a round-trip quantises to 1/127.
+  assert.ok(Math.abs(cutoffEvents[0].value - 0.25) <= 1 / 127);
+  assert.ok(Math.abs(cutoffEvents[1].value - 0.75) <= 1 / 127);
   assert.ok(parsed.song.tracks.mixer.some((e) => e.tick === 32 && e.key === 'mixer.bass1.pan'));
 });
 
